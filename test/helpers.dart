@@ -13,6 +13,7 @@ import 'package:nihonkoe/l10n/app_localizations.dart';
 import 'package:nihonkoe/logic/tags.dart';
 import 'package:nihonkoe/state/core.dart';
 import 'package:nihonkoe/player/handler.dart';
+import 'package:nihonkoe/state/library.dart';
 import 'package:nihonkoe/state/player.dart';
 import 'package:nihonkoe/state/posts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -122,14 +123,21 @@ Future<List<Override>> testOverrides({
   Future<List<TagIndexItem>> Function(TagIndex index)? loadTagIndex,
   NihonkoeAudioHandler? handler,
   MemoryPositions? positions,
+  MemoryFavorites? favorites,
+  MemoryHistory? history,
+  MemoryRatings? ratings,
 }) async {
+  final h = history ?? MemoryHistory();
   SharedPreferences.setMockInitialValues(prefs);
   final sharedPrefs = await SharedPreferences.getInstance();
   return [
     prefsProvider.overrideWithValue(sharedPrefs),
     httpClientProvider.overrideWithValue(client ?? mockHttp({})),
     imageProviderFactory.overrideWithValue((_) => MemoryImage(transparentPng)),
-    audioHandlerProvider.overrideWithValue(handler ?? makeHandler(positions: positions)),
+    audioHandlerProvider.overrideWithValue(handler ?? makeHandler(positions: positions, history: h)),
+    favoritesRepoProvider.overrideWithValue(favorites ?? MemoryFavorites()),
+    historyRepoProvider.overrideWithValue(h),
+    ratingsRepoProvider.overrideWithValue(ratings ?? MemoryRatings()),
     positionsRepoProvider.overrideWithValue(positions ?? MemoryPositions()),
     tagIndexProvider.overrideWith((ref, index) => loadTagIndex?.call(index) ?? Future.value(tagIndex)),
   ];

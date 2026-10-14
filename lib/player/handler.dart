@@ -96,6 +96,7 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   final _state = BehaviorSubject.seeded(const PlayerSnapshot());
   final _playback = BehaviorSubject.seeded(const PlaybackInfo());
   final _saves = BehaviorSubject.seeded(0);
+  final _historyTicks = BehaviorSubject.seeded(0);
 
   ValueStream<PlayerSnapshot> get snapshots => _state.stream;
   PlayerSnapshot get snapshot => _state.value;
@@ -103,6 +104,9 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
 
   /// Ticks after each listening-position write, so "Resume · time" can re-read.
   ValueStream<int> get savedPositions => _saves.stream;
+
+  /// Ticks after a play has been written to history, so the Library tab can re-read.
+  ValueStream<int> get historyChanges => _historyTicks.stream;
   Stream<Duration> get positionStream => _engine.positionStream;
   Duration get position => _engine.position;
 
@@ -143,7 +147,7 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
     _positionKnown = true;
     _lastSaved = saved ?? 0;
     _lastPosition = saved ?? 0;
-    unawaited(_history.recordPlay(item.post).catchError((Object _) {}));
+    unawaited(_history.recordPlay(item.post).then((_) => _historyTicks.add(_historyTicks.value + 1)).catchError((Object _) {}));
     try {
       mediaItem.add(_mediaItemFor(item, null));
       // just_audio keeps playing across a source change; pause so the new work isn't heard from 0 before its seek.
@@ -464,5 +468,6 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
     await _state.close();
     await _playback.close();
     await _saves.close();
+    await _historyTicks.close();
   }
 }
