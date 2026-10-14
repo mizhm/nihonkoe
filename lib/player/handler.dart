@@ -5,6 +5,7 @@ import 'package:rxdart/rxdart.dart';
 
 import '../api/models.dart';
 import '../data/db.dart';
+import '../logic/chapters.dart';
 import '../logic/position.dart';
 import '../logic/queue.dart';
 import '../logic/sleep.dart';
@@ -106,6 +107,7 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   double _lastSaved = 0;
   bool _ended = false;
   int _loadToken = 0;
+  EngineState _lastState = EngineState.idle;
 
   void _emit(PlayerSnapshot next) => _state.add(next);
 
@@ -251,7 +253,116 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
       speed: snapshot.rate,
       queueIndex: snapshot.index < 0 ? null : snapshot.index,
     ));
+    if (status.state == EngineState.completed && _lastState != EngineState.completed) {
+      final item = snapshot.current;
+      if (item != null) unawaited(_finish(item));
+    }
+    _lastState = status.state;
   }
+
+  Future<void> _finish(QueueItem item) async {
+    await _positions.save(item.key, null);
+    final s = snapshot;
+    switch (finishAction(s.queue, s.index, s.repeat, s.sleep)) {
+      case FinishStop():
+        _ended = true;
+        await _engine.pause();
+        if (s.sleep is SleepItemEnd) _emit(snapshot.copyWith(sleep: const SleepOff()));
+      case FinishRestart():
+        await _engine.seek(Duration.zero);
+        _engine.play();
+      case FinishLoad(:final index):
+        await _load(index, startAt: Duration.zero);
+    }
+  }
+
+  Future<void> enqueue(List<QueueItem> items) async {
+    final s = snapshot;
+    if (s.current == null) return playItems(items);
+    _emit(s.copyWith(queue: appendUnique(s.queue, items), ordered: appendUnique(s.ordered, items)));
+  }
+
+  Future<void> playNextItems(List<QueueItem> items) async {
+    final s = snapshot;
+    final current = s.current;
+    if (current == null) return playItems(items);
+    _emit(s.copyWith(
+      queue: insertNext(s.queue, s.index, items),
+      ordered: insertNext(s.ordered, s.ordered.indexWhere((i) => i.key == current.key), items),
+    ));
+  }
+
+  Future<void> nextChapter() async {
+    final item = snapshot.current;
+    if (item == null) return;
+    final start = nextChapterStart(item.chapters, _seconds(_engine.position));
+    if (start != null) return seek(_duration(start));
+    final s = snapshot;
+    final next = nextIndex(s.queue.length, s.index, s.repeat, false);
+    if (next != null) await _load(next, startAt: Duration.zero);
+  }
+
+  Future<void> previousChapter() async {
+    final s = snapshot;
+    final item = s.current;
+    if (item == null) return;
+    final position = _seconds(_engine.position);
+    final previous = previousIndex(s.queue.length, s.index, s.repeat);
+    if (position <= restartThresholdSeconds && previous != null) {
+      await _saveCurrent();
+      return _load(previous, startAt: Duration.zero);
+    }
+    await seek(_duration(previousChapterStart(item.chapters, position)));
+  }
+
+  Future<void> seekBy(int seconds) => seek(_engine.position + Duration(seconds: seconds));
+
+  Future<void> jumpTo(int index) async {
+    if (index == snapshot.index) return;
+    await _saveCurrent();
+    await _load(index);
+  }
+
+  void removeKey(String key) {
+    final s = snapshot;
+    final next = removeFromQueue((queue: s.queue, ordered: s.ordered, index: s.index), key);
+    _emit(s.copyWith(queue: next.queue, ordered: next.ordered, index: next.index));
+  }
+
+  void moveItem(int from, int to) {
+    final s = snapshot;
+    final next = moveInQueue((queue: s.queue, ordered: s.ordered, index: s.index), from, to);
+    _emit(s.copyWith(queue: next.queue, index: next.index));
+  }
+
+  void cycleRepeat() => _emit(snapshot.copyWith(repeat: nextRepeat(snapshot.repeat)));
+
+  void toggleShuffle() {
+    final s = snapshot;
+    final current = s.current;
+    if (current == null) return _emit(s.copyWith(shuffle: !s.shuffle));
+    final at = s.ordered.indexWhere((i) => i.key == current.key);
+    if (s.shuffle) return _emit(s.copyWith(shuffle: false, queue: s.ordered, index: at));
+    _emit(s.copyWith(shuffle: true, queue: shuffleKeepingCurrent(s.ordered, at, random: _random), index: 0));
+  }
+
+  @override
+  Future<void> setSpeed(double speed) async {
+    _emit(snapshot.copyWith(rate: speed));
+    await _engine.setSpeed(speed);
+  }
+
+  // Headset and notification buttons: chapters first, like the in-app skip buttons.
+  @override
+  Future<void> skipToNext() => nextChapter();
+  @override
+  Future<void> skipToPrevious() => previousChapter();
+  @override
+  Future<void> skipToQueueItem(int index) => jumpTo(index);
+  @override
+  Future<void> fastForward() => seekBy(30);
+  @override
+  Future<void> rewind() => seekBy(-15);
 
   void _onError(Object error) => _emit(snapshot.copyWith(error: '$error'));
 
