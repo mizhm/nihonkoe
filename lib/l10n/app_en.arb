@@ -1,0 +1,243 @@
+{
+  "@@locale": "en",
+  "tabsHome": "Discover",
+  "tabsSearch": "Search",
+  "tabsLibrary": "Library",
+  "tabsSettings": "Settings",
+  "feedLatest": "All",
+  "feedRequested": "Requested",
+  "feedManiax": "R18",
+  "sortHeading": "Sort",
+  "sortNewest": "Newest",
+  "sortOldest": "Oldest",
+  "sortTitle": "Title A→Z",
+  "sortPopular": "Popular",
+  "sortPopularWeek": "Week",
+  "sortPopularMonth": "Month",
+  "sortPopularYear": "Year",
+  "sortPopularAll": "All time",
+  "commonRetry": "Retry",
+  "commonCancel": "Cancel",
+  "commonClose": "Close",
+  "listErrorTitle": "Couldn't load",
+  "listErrorHint": "Check your connection and try again.",
+  "listEmpty": "No results",
+  "listLoadMore": "Load more",
+  "listRefreshFailed": "Couldn't refresh. Pull down to try again.",
+  "searchPlaceholder": "Title, CV, RJ code…",
+  "searchFilterPlaceholder": "Filter list…",
+  "searchModeKeyword": "Keyword",
+  "searchModeTags": "Tags",
+  "searchModeCv": "Voice actors",
+  "searchHint": "Search by title, CV or RJ code",
+  "searchHintDescription": "Press search on the keyboard to see results.",
+  "searchWorks": "{count} works",
+  "@searchWorks": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "searchRecent": "Recent searches",
+  "searchClearHistory": "Clear",
+  "searchRemoveHistory": "Remove \"{q}\" from history",
+  "@searchRemoveHistory": {
+    "placeholders": {
+      "q": {}
+    }
+  },
+  "searchInAll": "Search \"{q}\" in all works",
+  "@searchInAll": {
+    "placeholders": {
+      "q": {}
+    }
+  },
+  "detailLoadFailed": "Couldn't load this work",
+  "detailNotFound": "Work not found",
+  "detailPlay": "Play",
+  "detailResume": "Resume · {time}",
+  "@detailResume": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "detailAddToQueue": "Add to queue",
+  "detailNoStream": "This work has no audio yet.",
+  "detailTags": "Tags",
+  "detailImages": "Images",
+  "detailChapters": "Chapters · {count}",
+  "@detailChapters": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "detailFavorite": "Favorite",
+  "detailUnfavorite": "Remove favorite",
+  "detailRate": "Rate {n} stars",
+  "@detailRate": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "detailOpenImage": "View image {n}",
+  "@detailOpenImage": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "playerNowPlaying": "Now playing",
+  "playerClose": "Close player",
+  "playerNothing": "Nothing playing",
+  "playerError": "Playback failed. Check your connection and retry.",
+  "playerErrorShort": "Playback failed",
+  "playerRetry": "Retry playback",
+  "playerPlay": "Play",
+  "playerPause": "Pause",
+  "playerPreviousChapter": "Previous chapter",
+  "playerNextChapter": "Next chapter",
+  "playerBack15": "Back 15 seconds",
+  "playerForward30": "Forward 30 seconds",
+  "playerSpeed": "Speed {rate}x",
+  "@playerSpeed": {
+    "placeholders": {
+      "rate": {}
+    }
+  },
+  "speedTitle": "Playback speed",
+  "playerShuffle": "Shuffle",
+  "playerShuffleOff": "Turn off shuffle",
+  "playerRepeatOff": "Repeat: off",
+  "playerRepeatAll": "Repeat: queue",
+  "playerRepeatOne": "Repeat: one",
+  "playerPosition": "Playback position",
+  "playerOpen": "Open player: {title}",
+  "@playerOpen": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "playerChapters": "Chapters",
+  "playerQueue": "Queue",
+  "playerMore": "More",
+  "playerStop": "Stop playback",
+  "moreQueueCount": "{count} items",
+  "@moreQueueCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "moreOpenWork": "Open work page",
+  "queueRemove": "Remove {title} from queue",
+  "@queueRemove": {
+    "placeholders": {
+      "title": {}
+    }
+  },
+  "sleepTitle": "Sleep timer",
+  "sleepMinutes": "{n} min",
+  "@sleepMinutes": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "sleepChapterEnd": "End of chapter",
+  "sleepWorkEnd": "End of work",
+  "sleepOff": "Turn off timer",
+  "sleepByMinutes": "Minutes",
+  "sleepByContent": "By content",
+  "sleepStopsAt": "Stops at {time}",
+  "@sleepStopsAt": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "sleepExtend": "+{n} min",
+  "@sleepExtend": {
+    "placeholders": {
+      "n": {}
+    }
+  },
+  "sleepChangeTo": "Change to",
+  "sleepRemainingChapter": "End of chapter",
+  "sleepRemainingWork": "End of work",
+  "sleepActive": "Sleep timer: {label}",
+  "@sleepActive": {
+    "placeholders": {
+      "label": {}
+    }
+  },
+  "libraryFavorites": "Favorites",
+  "libraryHistory": "History",
+  "libraryRated": "Rated",
+  "libraryClear": "Clear",
+  "libraryClearConfirm": "Clear listening history?",
+  "libraryEmptyFavorites": "No favorites yet",
+  "libraryEmptyFavoritesHint": "Tap ♥ on a work to save it.",
+  "libraryEmptyHistory": "Nothing played yet",
+  "libraryEmptyRated": "No rated works yet",
+  "libraryEmptyRatedHint": "Pick stars on a work page.",
+  "libraryGroupToday": "Today",
+  "libraryGroupYesterday": "Yesterday",
+  "libraryGroupWeek": "This week",
+  "libraryGroupOlder": "Earlier",
+  "libraryInProgress": "In progress · {time}",
+  "@libraryInProgress": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "settingsAppearance": "Appearance",
+  "settingsThemeSystem": "System",
+  "settingsThemeLight": "Light",
+  "settingsThemeDark": "Dark",
+  "settingsLanguage": "Language",
+  "settingsPrivacySection": "Privacy",
+  "settingsPrivacy": "Privacy mode",
+  "settingsPrivacyHint": "Blur covers and hide content in the app switcher.",
+  "settingsLock": "App lock",
+  "settingsLockHint": "Require Face ID, fingerprint or passcode when reopening.",
+  "layoutSwitch": "Switch layout: {name}",
+  "@layoutSwitch": {
+    "placeholders": {
+      "name": {}
+    }
+  },
+  "layoutGrid": "Large grid",
+  "layoutCompact": "Compact grid",
+  "layoutList": "List",
+  "settingsAccent": "Accent colour",
+  "accentLavender": "Lavender",
+  "accentSakura": "Sakura",
+  "accentOcean": "Ocean",
+  "settingsTheme": "Theme",
+  "settingsStorage": "Storage",
+  "settingsClearImageCache": "Clear image cache",
+  "settingsReloadTags": "Reload tag & voice actor lists",
+  "settingsClearHistory": "Clear listening history",
+  "settingsDone": "Done",
+  "settingsAbout": "About",
+  "settingsSource": "Source code",
+  "lockUnlock": "Unlock",
+  "lockPrompt": "Unlock nihonkoe",
+  "lockEnablePrompt": "Confirm enabling app lock",
+  "lockDisablePrompt": "Confirm disabling app lock",
+  "lockUnavailableTitle": "Can't enable app lock",
+  "lockUnavailable": "Set up Face ID, a fingerprint or a passcode on this device first.",
+  "lockFailedTitle": "Couldn't authenticate",
+  "lockLockout": "Too many attempts. Unlock your device, then try again.",
+  "homeFeatured": "Featured",
+  "homeHotWeek": "Hot this week",
+  "homeHotMonth": "Hot this month",
+  "homeLatest": "Latest",
+  "commonSeeAll": "See all",
+  "actionsPlayNow": "Play now",
+  "actionsPlayNext": "Play next",
+  "actionsViewCircle": "View circle",
+  "actionsViewCv": "View CV",
+  "actionsViewTags": "View tags…",
+  "actionsShare": "Share",
+  "actionsOpenWeb": "Open on web",
+  "accentSystem": "From wallpaper",
+  "languageSystem": "System",
+  "detailDownload": "Download",
+  "libraryComingSoon": "The library arrives in a later build."
+}
