@@ -1,9 +1,22 @@
 import 'package:sqflite/sqflite.dart';
 
 import '../api/models.dart';
+import '../logic/library.dart';
 import '../logic/position.dart';
 
 const _postColumns = 'post_id INTEGER PRIMARY KEY, title TEXT NOT NULL, cover TEXT, cv TEXT, rj_code TEXT, circle TEXT';
+
+Map<String, Object?> _postRow(PostRef p) =>
+    {'post_id': p.id, 'title': p.title, 'cover': p.cover, 'cv': p.cv, 'rj_code': p.rjCode, 'circle': p.circle};
+
+PostRef _postFrom(Map<String, Object?> r) => PostRef(
+      id: r['post_id']! as int,
+      title: r['title']! as String,
+      cover: r['cover'] as String?,
+      cv: r['cv'] as String?,
+      rjCode: r['rj_code'] as String?,
+      circle: r['circle'] as String?,
+    );
 
 Future<void> createSchema(Database db, int version) async {
   final batch = db.batch()
@@ -88,17 +101,47 @@ class HistoryRepo {
   final Database _db;
   final int Function() _now;
 
-  Future<void> recordPlay(PostRef post) => _db.insert(
-        'history',
-        {
-          'post_id': post.id,
-          'title': post.title,
-          'cover': post.cover,
-          'cv': post.cv,
-          'rj_code': post.rjCode,
-          'circle': post.circle,
-          'played_at': _now(),
-        },
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+  Future<void> recordPlay(PostRef post) =>
+      _db.insert('history', {..._postRow(post), 'played_at': _now()}, conflictAlgorithm: ConflictAlgorithm.replace);
+
+  Future<List<HistoryEntry>> list() async => [
+        for (final r in await _db.query('history', orderBy: 'played_at DESC'))
+          HistoryEntry(post: _postFrom(r), playedAt: r['played_at']! as int),
+      ];
+
+  Future<void> remove(int postId) => _db.delete('history', where: 'post_id = ?', whereArgs: [postId]);
+
+  /// Only the history table: favorites, ratings and listening positions stay.
+  Future<void> clear() => _db.delete('history');
+}
+
+class FavoritesRepo {
+  FavoritesRepo(this._db, {int Function()? now}) : _now = now ?? (() => DateTime.now().millisecondsSinceEpoch);
+  final Database _db;
+  final int Function() _now;
+
+  Future<List<PostRef>> list() async => [for (final r in await _db.query('favorites', orderBy: 'added_at DESC')) _postFrom(r)];
+
+  Future<bool> toggle(PostRef post) => _db.transaction((txn) async {
+        final removed = await txn.delete('favorites', where: 'post_id = ?', whereArgs: [post.id]);
+        if (removed > 0) return false;
+        await txn.insert('favorites', {..._postRow(post), 'added_at': _now()});
+        return true;
+      });
+}
+
+class RatingsRepo {
+  RatingsRepo(this._db, {int Function()? now}) : _now = now ?? (() => DateTime.now().millisecondsSinceEpoch);
+  final Database _db;
+  final int Function() _now;
+
+  Future<List<RatedPost>> list() async => [
+        for (final r in await _db.query('ratings', orderBy: 'rating DESC, rated_at DESC'))
+          RatedPost(post: _postFrom(r), rating: r['rating']! as int),
+      ];
+
+  Future<void> set(PostRef post, int rating) => rating <= 0
+      ? _db.delete('ratings', where: 'post_id = ?', whereArgs: [post.id])
+      : _db.insert('ratings', {..._postRow(post), 'rating': rating.clamp(1, 5), 'rated_at': _now()},
+          conflictAlgorithm: ConflictAlgorithm.replace);
 }

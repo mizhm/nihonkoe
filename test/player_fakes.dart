@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:nihonkoe/api/models.dart';
 import 'package:nihonkoe/data/db.dart';
+import 'package:nihonkoe/logic/library.dart';
 import 'package:nihonkoe/logic/position.dart';
 import 'package:nihonkoe/logic/queue.dart';
 import 'package:nihonkoe/player/engine.dart';
@@ -125,8 +126,43 @@ class MemoryPositions implements PositionsRepo {
 
 class MemoryHistory implements HistoryRepo {
   final plays = <PostRef>[];
+  final _rows = <int, HistoryEntry>{};
+  var _clock = 0;
+
   @override
-  Future<void> recordPlay(PostRef post) async => plays.add(post);
+  Future<void> recordPlay(PostRef post) async {
+    plays.add(post);
+    _rows[post.id] = HistoryEntry(post: post, playedAt: ++_clock);
+  }
+
+  @override
+  Future<List<HistoryEntry>> list() async => [..._rows.values]..sort((a, b) => b.playedAt.compareTo(a.playedAt));
+  @override
+  Future<void> remove(int postId) async => _rows.remove(postId);
+  @override
+  Future<void> clear() async => _rows.clear();
+}
+
+class MemoryFavorites implements FavoritesRepo {
+  final _items = <PostRef>[];
+  @override
+  Future<List<PostRef>> list() async => List.of(_items);
+  @override
+  Future<bool> toggle(PostRef post) async {
+    final had = _items.any((p) => p.id == post.id);
+    _items.removeWhere((p) => p.id == post.id);
+    if (!had) _items.insert(0, post);
+    return !had;
+  }
+}
+
+class MemoryRatings implements RatingsRepo {
+  final _items = <int, RatedPost>{};
+  @override
+  Future<List<RatedPost>> list() async => [..._items.values]..sort((a, b) => b.rating.compareTo(a.rating));
+  @override
+  Future<void> set(PostRef post, int rating) async =>
+      rating <= 0 ? _items.remove(post.id) : _items[post.id] = RatedPost(post: post, rating: rating);
 }
 
 NihonkoeAudioHandler makeHandler({FakeEngine? engine, MemoryPositions? positions, MemoryHistory? history, int Function()? now}) =>
