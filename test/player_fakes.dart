@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:nihonkoe/api/models.dart';
 import 'package:nihonkoe/data/db.dart';
+import 'package:nihonkoe/logic/position.dart';
 import 'package:nihonkoe/logic/queue.dart';
 import 'package:nihonkoe/player/engine.dart';
 import 'package:nihonkoe/player/handler.dart';
@@ -119,14 +120,7 @@ class MemoryPositions implements PositionsRepo {
   @override
   Future<void> save(String key, double? seconds) async => seconds == null ? values.remove(key) : values[key] = seconds;
   @override
-  Future<double?> inProgress(int postId) async {
-    final first = values['$postId:0'];
-    if (first != null && first > 0) return first;
-    for (final e in values.entries) {
-      if (e.key.startsWith('$postId:') && e.value > 0) return e.value;
-    }
-    return null;
-  }
+  Future<ResumePoint?> inProgress(int postId) async => inProgressPosition(values, postId);
 }
 
 class MemoryHistory implements HistoryRepo {

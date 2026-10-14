@@ -28,9 +28,9 @@ void main() {
     final repo = PositionsRepo(db, now: () => ++clock);
     await repo.save('5:1', 30);
     await repo.save('50:0', 99);
-    expect(await repo.inProgress(5), 30);
+    expect(await repo.inProgress(5), (stream: 1, seconds: 30.0));
     await repo.save('5:0', 120);
-    expect(await repo.inProgress(5), 120);
+    expect(await repo.inProgress(5), (stream: 0, seconds: 120.0));
     expect(await repo.inProgress(6), isNull);
   });
 

@@ -110,4 +110,30 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(en.detailNoStream), findsOneWidget);
   });
+
+  testWidgets('Resume continues the part that was left, not part 1', (tester) async {
+    tester.view.physicalSize = const Size(1080, 6000);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+    const twoParts = '<h1 class="page-title">Two parts</h1>'
+        '<audio><source src="https://v.weeab0o.xyz/A.mp3"></audio><audio><source src="https://v.weeab0o.xyz/B.mp3"></audio>';
+    final engine = FakeEngine();
+    final positions = MemoryPositions()..values['7:1'] = 754;
+    await tester.pumpWidget(ProviderScope(
+      overrides: await testOverrides(
+        client: mockHttp({'https://japaneseasmr.com/7/': twoParts}),
+        handler: makeHandler(engine: engine, positions: positions),
+        positions: positions,
+      ),
+      retry: noRetry,
+      child: const NihonkoeApp(),
+    ));
+    await tester.pumpAndSettle();
+    containerOf(tester).read(routerProvider).push(postPath('', 7));
+    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(FilledButton, en.detailResume('12:34')));
+    await tester.pumpAndSettle();
+    expect(engine.loads.single.url, 'https://v.weeab0o.xyz/B.mp3');
+    expect(engine.position, const Duration(seconds: 754));
+  });
 }

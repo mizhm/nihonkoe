@@ -77,7 +77,7 @@ class PositionsRepo {
       : _db.insert('positions', {'key': key, 'seconds': seconds, 'updated_at': _now()},
           conflictAlgorithm: ConflictAlgorithm.replace);
 
-  Future<double?> inProgress(int postId) async {
+  Future<ResumePoint?> inProgress(int postId) async {
     final rows = await _db.query('positions', columns: ['key', 'seconds'], where: 'key LIKE ?', whereArgs: ['$postId:%']);
     return inProgressPosition({for (final r in rows) r['key']! as String: (r['seconds']! as num).toDouble()}, postId);
   }

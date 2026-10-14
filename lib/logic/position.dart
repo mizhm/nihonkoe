@@ -12,12 +12,15 @@ double resumeTarget(double saved, double duration) => duration > 0 && saved > du
 /// current time, and a finished stream keeps its cleared position.
 double? stopPosition(double? pendingSeek, double currentTime, bool ended) => ended ? null : pendingSeek ?? currentTime;
 
-/// Resume time to show for a work: its first stream, else any later stream the user stopped in.
-double? inProgressPosition(Map<String, double> positions, int id) {
+typedef ResumePoint = ({int stream, double seconds});
+
+/// Where to resume a work: its first stream, else any later stream the user stopped in.
+ResumePoint? inProgressPosition(Map<String, double> positions, int id) {
   final first = positions['$id:0'];
-  if (first != null && first > 0) return first;
+  if (first != null && first > 0) return (stream: 0, seconds: first);
   for (final MapEntry(:key, :value) in positions.entries) {
-    if (key.startsWith('$id:') && value > 0) return value;
+    final stream = key.startsWith('$id:') ? int.tryParse(key.substring('$id:'.length)) : null;
+    if (stream != null && value > 0) return (stream: stream, seconds: value);
   }
   return null;
 }

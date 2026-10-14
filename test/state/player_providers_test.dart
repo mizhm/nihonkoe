@@ -15,13 +15,13 @@ void main() {
     ]);
     c.listen(playerProvider, (_, _) {});
     c.listen(inProgressProvider(1), (_, _) {});
-    expect(await c.read(inProgressProvider(1).future), 42);
+    expect((await c.read(inProgressProvider(1).future))?.seconds, 42);
     await handler.playItems([item(1)]);
     await pumpEventQueue();
     expect(c.read(playerProvider).value!.current!.key, '1:0');
     engine.position = const Duration(seconds: 99); // listened further, then stopped
     await handler.stop();
     await pumpEventQueue();
-    expect(await c.read(inProgressProvider(1).future), 99);
+    expect((await c.read(inProgressProvider(1).future))?.seconds, 99);
   });
 }

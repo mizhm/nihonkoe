@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/db.dart';
+import '../logic/position.dart';
 import '../player/handler.dart';
 import 'core.dart';
 
@@ -15,7 +16,7 @@ final positionProvider = StreamProvider.autoDispose<Duration>((ref) => ref.watch
 final positionsRepoProvider = Provider<PositionsRepo>((ref) => PositionsRepo(ref.watch(dbProvider)));
 
 /// Saved listening position of a work, for "Resume · mm:ss". Re-reads when the playing item or queue changes.
-final inProgressProvider = FutureProvider.autoDispose.family<double?, int>((ref, postId) {
+final inProgressProvider = FutureProvider.autoDispose.family<ResumePoint?, int>((ref, postId) {
   ref.watch(playerProvider.select((s) => (s.value?.current?.key, s.value?.queue.length)));
   return ref.watch(positionsRepoProvider).inProgress(postId);
 });

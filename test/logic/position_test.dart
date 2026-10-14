@@ -22,8 +22,8 @@ void main() {
   });
 
   test('inProgressPosition prefers the first stream, then any later one, ignoring zeros and other works', () {
-    expect(inProgressPosition({'5:0': 120, '5:1': 30}, 5), 120);
-    expect(inProgressPosition({'5:1': 30, '50:0': 99}, 5), 30);
+    expect(inProgressPosition({'5:0': 120, '5:1': 30}, 5), (stream: 0, seconds: 120.0));
+    expect(inProgressPosition({'5:1': 30, '50:0': 99}, 5), (stream: 1, seconds: 30.0));
     expect(inProgressPosition({'50:0': 99, '5:0': 0}, 5), isNull);
     expect(inProgressPosition({}, 5), isNull);
   });

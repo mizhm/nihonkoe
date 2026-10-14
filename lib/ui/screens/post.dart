@@ -115,9 +115,9 @@ class _PostBody extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: FilledButton.icon(
-                      onPressed: items.isEmpty ? null : () => handler.playItems(items),
+                      onPressed: items.isEmpty ? null : () => handler.playItems(items, start: resumeAt?.stream ?? 0),
                       icon: const Icon(Symbols.play_arrow),
-                      label: Text(resumeAt == null ? l.detailPlay : l.detailResume(formatTime(resumeAt))),
+                      label: Text(resumeAt == null ? l.detailPlay : l.detailResume(formatTime(resumeAt.seconds))),
                     ),
                   ),
                   const SizedBox(width: 8),
