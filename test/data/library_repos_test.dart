@@ -62,4 +62,11 @@ void main() {
     expect((await RatingsRepo(db).list()).single.rating, 4);
     expect(await PositionsRepo(db).get('1:0'), 120);
   });
+
+  test('plays with the same timestamp list the most recent first', () async {
+    final repo = HistoryRepo(db, now: () => 42);
+    await repo.recordPlay(ref(1));
+    await repo.recordPlay(ref(2));
+    expect([for (final e in await repo.list()) e.post.id], [2, 1]);
+  });
 }

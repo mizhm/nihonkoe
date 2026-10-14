@@ -21,7 +21,13 @@ Future<void> main() async {
   final session = await AudioSession.instance;
   await session.configure(const AudioSessionConfiguration.music());
   final handler = await AudioService.init(
-    builder: () => NihonkoeAudioHandler(engine: JustAudioEngine(), positions: PositionsRepo(db), history: HistoryRepo(db)),
+    builder: () => NihonkoeAudioHandler(
+      engine: JustAudioEngine(),
+      positions: PositionsRepo(db),
+      history: HistoryRepo(db),
+      // Playback can start from a media button before any UI builds; respect privacy from the first track.
+      hideArtwork: prefs.getBool('privacy') ?? false,
+    ),
     config: const AudioServiceConfig(
       androidNotificationChannelId: 'dev.local.nihonkoe.playback',
       androidNotificationChannelName: 'Playback',

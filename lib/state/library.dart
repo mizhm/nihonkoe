@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/models.dart';
@@ -65,3 +67,28 @@ class LibraryNotifier extends AsyncNotifier<LibraryData> {
 }
 
 final libraryProvider = AsyncNotifierProvider<LibraryNotifier, LibraryData>(LibraryNotifier.new);
+
+/// The wall clock, overridable in tests.
+final clockProvider = Provider<DateTime Function()>((ref) => DateTime.now);
+
+/// Today's date (midnight), re-emitted when the day changes so "Today"/"Yesterday" labels stay right.
+final todayProvider = NotifierProvider<TodayNotifier, DateTime>(TodayNotifier.new);
+
+class TodayNotifier extends Notifier<DateTime> {
+  Timer? _timer;
+
+  @override
+  DateTime build() {
+    ref.onDispose(() => _timer?.cancel());
+    return _schedule();
+  }
+
+  DateTime _schedule() {
+    final now = ref.read(clockProvider)();
+    final today = DateTime(now.year, now.month, now.day);
+    _timer?.cancel();
+    // A second past midnight, so the new day is certain even with timer jitter.
+    _timer = Timer(DateTime(now.year, now.month, now.day + 1).difference(now) + const Duration(seconds: 1), () => state = _schedule());
+    return today;
+  }
+}

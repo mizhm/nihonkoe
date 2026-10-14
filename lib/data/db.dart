@@ -105,7 +105,7 @@ class HistoryRepo {
       _db.insert('history', {..._postRow(post), 'played_at': _now()}, conflictAlgorithm: ConflictAlgorithm.replace);
 
   Future<List<HistoryEntry>> list() async => [
-        for (final r in await _db.query('history', orderBy: 'played_at DESC'))
+        for (final r in await _db.query('history', orderBy: 'played_at DESC, rowid DESC'))
           HistoryEntry(post: _postFrom(r), playedAt: r['played_at']! as int),
       ];
 

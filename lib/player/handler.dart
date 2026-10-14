@@ -75,6 +75,7 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
     int Function()? now,
     this._random,
     bool tick = true,
+    this._hideArtwork = false,
   }) : _now = now ?? (() => DateTime.now().millisecondsSinceEpoch) {
     _subscriptions.addAll([
       _engine.positionStream.listen((p) => _tick(_seconds(p))),
@@ -117,7 +118,7 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   double _lastPosition = 0;
   bool _wasPlaying = false;
   int _loadToken = 0;
-  bool _hideArtwork = false;
+  bool _hideArtwork; // privacy mode, also known before the UI starts (headless playback)
   // False from the start of a load until the new item's saved position is read: until then
   // just_audio still reports the previous source's position, which must never be saved for this item.
   bool _positionKnown = true;

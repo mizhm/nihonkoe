@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:audio_service/audio_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:nihonkoe/player/handler.dart';
+
 import '../player_fakes.dart';
 
 // Behaviour that only shows with just_audio's real event order (modelled in FakeEngine) and the ticker running.
@@ -92,5 +94,17 @@ void main() {
     engine.audibleFrom.clear();
     await h.playItems([item(1)]);
     expect(engine.audibleFrom, [const Duration(seconds: 300)]);
+  });
+
+  test('privacy known at start-up hides artwork before the UI exists (headless playback)', () async {
+    final h = NihonkoeAudioHandler(
+      engine: FakeEngine(),
+      positions: MemoryPositions(),
+      history: MemoryHistory(),
+      tick: false,
+      hideArtwork: true,
+    );
+    await h.playItems([item(1)]);
+    expect(h.mediaItem.value!.artUri, isNull);
   });
 }

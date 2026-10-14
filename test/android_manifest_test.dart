@@ -35,4 +35,11 @@ void main() {
     final styles = File('android/app/src/main/res/values/styles.xml').readAsStringSync();
     expect(styles, contains('name="LaunchTheme" parent="Theme.AppCompat'));
   });
+
+  test('the post-launch theme is AppCompat too (biometric dialog on API 24-27)', () {
+    for (final f in ['values', 'values-night']) {
+      final styles = File('android/app/src/main/res/$f/styles.xml').readAsStringSync();
+      expect(styles, contains('name="NormalTheme" parent="Theme.AppCompat'), reason: f);
+    }
+  });
 }
