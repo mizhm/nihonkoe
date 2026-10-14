@@ -1,8 +1,11 @@
+import 'dart:ui' show ImageFilter;
+
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../state/core.dart';
+import '../../state/settings.dart';
 
 class Cover extends ConsumerWidget {
   const Cover({super.key, this.url, this.aspectRatio, this.borderRadius = BorderRadius.zero, this.fit = BoxFit.cover});
@@ -26,6 +29,10 @@ class Cover extends ConsumerWidget {
             frameBuilder: (_, child, frame, sync) => sync || frame != null ? child : placeholder,
             errorBuilder: (_, _, _) => placeholder,
           );
+    if (url != null && ref.watch(settingsProvider.select((s) => s.privacy))) {
+      // Privacy mode: covers are recognisable thumbnails of explicit art.
+      image = ImageFiltered(imageFilter: ImageFilter.blur(sigmaX: 24, sigmaY: 24), child: image);
+    }
     image = ClipRRect(borderRadius: borderRadius, child: SizedBox.expand(child: image));
     return aspectRatio == null ? image : AspectRatio(aspectRatio: aspectRatio!, child: image);
   }
