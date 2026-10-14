@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:rxdart/rxdart.dart';
 
 import '../api/models.dart';
@@ -106,6 +107,8 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   double? _pendingSeek;
   double _lastSaved = 0;
   bool _ended = false;
+  double _lastPosition = 0;
+  bool _wasPlaying = false;
   int _loadToken = 0;
   EngineState _lastState = EngineState.idle;
 
@@ -125,6 +128,7 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
     if (token != _loadToken) return;
     _pendingSeek = saved;
     _lastSaved = saved ?? 0;
+    _lastPosition = saved ?? 0;
     mediaItem.add(_mediaItemFor(item, null));
     unawaited(_history.recordPlay(item.post).catchError((Object _) {}));
     try {
@@ -191,6 +195,7 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   @override
   Future<void> pause() async {
     await _engine.pause();
+    _wasPlaying = false; // a sleep timer that expires during the pause must not count as "was playing"
     await _saveCurrent();
   }
 
@@ -219,12 +224,21 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   void _tick(double position) {
     final item = snapshot.current;
     if (item == null || _pendingSeek != null) return;
+    _lastPosition = position;
     final playing = _engine.playing;
+    final action = sleepAction(snapshot.sleep, _now(), item.key, position, _wasPlaying || playing);
+    if (action == SleepAction.pause) unawaited(pause());
+    if (action != SleepAction.none) _emit(snapshot.copyWith(sleep: const SleepOff()));
     if (shouldSavePosition(playing, position, _lastSaved)) {
       _lastSaved = position;
       unawaited(_positions.save(item.key, position).catchError((Object _) {}));
     }
+    _wasPlaying = action == SleepAction.pause ? false : playing;
   }
+
+  @visibleForTesting
+  void tickForTest() => _tick(_seconds(_engine.position));
+
 
   void _onStatus(EngineStatus status) {
     _playback.add(PlaybackInfo(
@@ -363,6 +377,18 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   Future<void> fastForward() => seekBy(30);
   @override
   Future<void> rewind() => seekBy(-15);
+
+  void setSleep(SleepTimer timer) => _emit(snapshot.copyWith(sleep: timer));
+
+  void extendSleepBy(int minutes) => _emit(snapshot.copyWith(sleep: extendSleep(snapshot.sleep, minutes, _now())));
+
+  /// Reloads the current item where the listener had got to (a failed source reports position 0).
+  Future<void> retry() async {
+    final s = snapshot;
+    if (s.current == null) return;
+    final at = _seconds(_engine.position) > 0 ? _seconds(_engine.position) : _lastPosition;
+    await _load(s.index, startAt: _duration(at));
+  }
 
   void _onError(Object error) => _emit(snapshot.copyWith(error: '$error'));
 
