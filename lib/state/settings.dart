@@ -33,20 +33,34 @@ class Settings {
     this.language = LanguagePref.system,
     this.cardLayout = CardLayout.grid,
     this.homeSort = ListSort.newest,
+    this.privacy = false,
+    this.appLock = false,
   });
   final ThemePref theme;
   final AccentPref accent;
   final LanguagePref language;
   final CardLayout cardLayout;
   final ListSort homeSort;
+  final bool privacy; // blur covers, no lock-screen artwork
+  final bool appLock;
 
-  Settings copyWith({ThemePref? theme, AccentPref? accent, LanguagePref? language, CardLayout? cardLayout, ListSort? homeSort}) =>
+  Settings copyWith({
+    ThemePref? theme,
+    AccentPref? accent,
+    LanguagePref? language,
+    CardLayout? cardLayout,
+    ListSort? homeSort,
+    bool? privacy,
+    bool? appLock,
+  }) =>
       Settings(
         theme: theme ?? this.theme,
         accent: accent ?? this.accent,
         language: language ?? this.language,
         cardLayout: cardLayout ?? this.cardLayout,
         homeSort: homeSort ?? this.homeSort,
+        privacy: privacy ?? this.privacy,
+        appLock: appLock ?? this.appLock,
       );
 }
 
@@ -62,6 +76,8 @@ class SettingsNotifier extends Notifier<Settings> {
       language: _byName(LanguagePref.values, p.getString('language'), LanguagePref.system),
       cardLayout: toCardLayout(p.getString('cardLayout')),
       homeSort: toListSort(p.getString('homeSort')),
+      privacy: p.getBool('privacy') ?? false,
+      appLock: p.getBool('appLock') ?? false,
     );
   }
 
@@ -79,6 +95,16 @@ class SettingsNotifier extends Notifier<Settings> {
   }
 
   void setHomeSort(ListSort v) => _save('homeSort', v.id, state.copyWith(homeSort: v));
+
+  void setPrivacy(bool v) {
+    ref.read(prefsProvider).setBool('privacy', v);
+    state = state.copyWith(privacy: v);
+  }
+
+  void setAppLock(bool v) {
+    ref.read(prefsProvider).setBool('appLock', v);
+    state = state.copyWith(appLock: v);
+  }
 }
 
 final settingsProvider = NotifierProvider<SettingsNotifier, Settings>(SettingsNotifier.new);

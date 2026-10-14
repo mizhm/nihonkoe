@@ -55,4 +55,15 @@ void main() {
     expect(retryPolicy(1, Exception()), const Duration(milliseconds: 1000));
     expect(retryPolicy(2, Exception()), isNull);
   });
+
+  test('privacy and app lock persist', () async {
+    final c = await container({});
+    c.read(settingsProvider.notifier)
+      ..setPrivacy(true)
+      ..setAppLock(true);
+    final prefs = c.read(prefsProvider);
+    expect((prefs.getBool('privacy'), prefs.getBool('appLock')), (true, true));
+    final again = await container({'privacy': true, 'appLock': true});
+    expect((again.read(settingsProvider).privacy, again.read(settingsProvider).appLock), (true, true));
+  });
 }

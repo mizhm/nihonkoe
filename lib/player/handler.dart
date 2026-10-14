@@ -117,6 +117,7 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   double _lastPosition = 0;
   bool _wasPlaying = false;
   int _loadToken = 0;
+  bool _hideArtwork = false;
   // False from the start of a load until the new item's saved position is read: until then
   // just_audio still reports the previous source's position, which must never be saved for this item.
   bool _positionKnown = true;
@@ -176,12 +177,22 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
     title: item.title,
     artist: item.post.cv,
     album: item.post.circle,
-    artUri: item.post.cover == null ? null : Uri.parse(item.post.cover!),
+    artUri: _hideArtwork || item.post.cover == null ? null : Uri.parse(item.post.cover!),
     artHeaders: mediaHeaders,
     duration: duration,
   );
 
   /// Saves where the current item is, so switching works or stopping never loses more than nothing.
+  /// Privacy mode: no cover on the lock screen or in the notification.
+  set hideArtwork(bool value) {
+    if (value == _hideArtwork) return;
+    _hideArtwork = value;
+    final current = mediaItem.value;
+    final item = snapshot.current;
+    // A fresh MediaItem: copyWith(artUri: null) would keep the old artwork.
+    if (current != null && item != null) mediaItem.add(_mediaItemFor(item, current.duration));
+  }
+
   Future<void> _saveCurrent() async {
     final item = snapshot.current;
     if (item == null || !_positionKnown) return;

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'l10n/app_localizations.dart';
 import 'logic/i18n.dart';
 import 'router.dart';
+import 'state/privacy.dart';
 import 'state/settings.dart';
 
 (ColorScheme, ColorScheme) colorSchemes(AccentPref accent, ColorScheme? dynamicLight, ColorScheme? dynamicDark) {
@@ -21,6 +22,7 @@ class NihonkoeApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(privacySyncProvider);
     final settings = ref.watch(settingsProvider);
     final router = ref.watch(routerProvider);
     return DynamicColorBuilder(
