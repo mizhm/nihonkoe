@@ -36,13 +36,17 @@ class _LockGateState extends ConsumerState<LockGate> with WidgetsBindingObserver
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // The PIN/pattern fallback is a separate Android activity: the app "backgrounds" while it is open.
-    if (_authenticating) return;
-    if (state == AppLifecycleState.paused && ref.read(settingsProvider).appLock) {
-      setState(() => _locked = true);
-      _promptOnResume = true;
+    // The PIN/pattern fallback is a separate Android activity: the app "backgrounds" while any prompt is open.
+    final busy = ref.read(authInProgressProvider).value;
+    if (state == AppLifecycleState.paused) {
+      // The system may cancel our own prompt in the background; ask again on return unless it succeeds first.
+      if (_authenticating) _promptOnResume = true;
+      if (!busy && ref.read(settingsProvider).appLock) {
+        setState(() => _locked = true);
+        _promptOnResume = true;
+      }
     }
-    if (state == AppLifecycleState.resumed && _promptOnResume) {
+    if (state == AppLifecycleState.resumed && _promptOnResume && !busy) {
       _promptOnResume = false;
       _unlock();
     }
@@ -52,10 +56,16 @@ class _LockGateState extends ConsumerState<LockGate> with WidgetsBindingObserver
     if (_authenticating || !mounted) return;
     final l = context.l10n;
     _authenticating = true;
-    final result = await ref.read(authenticatorProvider).authenticate(l.lockPrompt).whenComplete(() => _authenticating = false);
+    final result = await runAuthentication(ref, l.lockPrompt).whenComplete(() => _authenticating = false);
     if (!mounted) return;
+    // No screen lock on the phone any more: nothing to authenticate with, and anyone holding it has access anyway.
+    // Unlock and turn app lock off rather than lock the user out for good.
+    if (result == AuthResult.unavailable) ref.read(settingsProvider.notifier).setAppLock(false);
     setState(() {
-      if (result == AuthResult.success) _locked = false;
+      if (result == AuthResult.success || result == AuthResult.unavailable) {
+        _locked = false;
+        _promptOnResume = false;
+      }
       _message = result == AuthResult.lockout ? l.lockLockout : null;
     });
   }
@@ -66,7 +76,8 @@ class _LockGateState extends ConsumerState<LockGate> with WidgetsBindingObserver
     final theme = Theme.of(context);
     return Stack(
       children: [
-        widget.child,
+        // While locked, screen readers and keyboard focus must not reach the app underneath.
+        ExcludeSemantics(excluding: _locked, child: ExcludeFocus(excluding: _locked, child: widget.child)),
         if (_locked)
           Positioned.fill(
             child: Material(
@@ -113,7 +124,7 @@ Future<void> setAppLockSecurely(BuildContext context, WidgetRef ref, bool enable
     if (context.mounted) await tell(l.lockUnavailableTitle, l.lockUnavailable);
     return;
   }
-  final result = await auth.authenticate(enabled ? l.lockEnablePrompt : l.lockDisablePrompt);
+  final result = await runAuthentication(ref, enabled ? l.lockEnablePrompt : l.lockDisablePrompt);
   if (result == AuthResult.success) {
     ref.read(settingsProvider.notifier).setAppLock(enabled);
   } else if (result == AuthResult.unavailable && context.mounted) {
