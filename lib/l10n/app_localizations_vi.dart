@@ -513,4 +513,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get libraryComingSoon => 'Thư viện sẽ có ở bản sau.';
+
+  @override
+  String get queueAdded => 'Đã thêm vào hàng đợi';
+
+  @override
+  String get queueNext => 'Sẽ phát tiếp theo';
 }

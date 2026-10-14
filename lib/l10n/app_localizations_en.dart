@@ -512,4 +512,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get libraryComingSoon => 'The library arrives in a later build.';
+
+  @override
+  String get queueAdded => 'Added to queue';
+
+  @override
+  String get queueNext => 'Plays next';
 }

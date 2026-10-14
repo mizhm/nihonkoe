@@ -1029,6 +1029,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The library arrives in a later build.'**
   String get libraryComingSoon;
+
+  /// No description provided for @queueAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to queue'**
+  String get queueAdded;
+
+  /// No description provided for @queueNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Plays next'**
+  String get queueNext;
 }
 
 class _AppLocalizationsDelegate

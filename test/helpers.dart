@@ -12,8 +12,12 @@ import 'package:nihonkoe/api/models.dart';
 import 'package:nihonkoe/l10n/app_localizations.dart';
 import 'package:nihonkoe/logic/tags.dart';
 import 'package:nihonkoe/state/core.dart';
+import 'package:nihonkoe/player/handler.dart';
+import 'package:nihonkoe/state/player.dart';
 import 'package:nihonkoe/state/posts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'player_fakes.dart';
 
 /// A minimal archive page with one post per id.
 String listHtml(List<int> ids, {bool next = false}) =>
@@ -116,6 +120,8 @@ Future<List<Override>> testOverrides({
   Map<String, Object> prefs = const {'language': 'en'},
   List<TagIndexItem> tagIndex = const [],
   Future<List<TagIndexItem>> Function(TagIndex index)? loadTagIndex,
+  NihonkoeAudioHandler? handler,
+  MemoryPositions? positions,
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
   final sharedPrefs = await SharedPreferences.getInstance();
@@ -123,6 +129,8 @@ Future<List<Override>> testOverrides({
     prefsProvider.overrideWithValue(sharedPrefs),
     httpClientProvider.overrideWithValue(client ?? mockHttp({})),
     imageProviderFactory.overrideWithValue((_) => MemoryImage(transparentPng)),
+    audioHandlerProvider.overrideWithValue(handler ?? makeHandler(positions: positions)),
+    positionsRepoProvider.overrideWithValue(positions ?? MemoryPositions()),
     tagIndexProvider.overrideWith((ref, index) => loadTagIndex?.call(index) ?? Future.value(tagIndex)),
   ];
 }

@@ -154,5 +154,7 @@
   "accentSystem": "Theo hình nền",
   "languageSystem": "Theo hệ thống",
   "detailDownload": "Tải về",
-  "libraryComingSoon": "Thư viện sẽ có ở bản sau."
+  "libraryComingSoon": "Thư viện sẽ có ở bản sau.",
+  "queueAdded": "Đã thêm vào hàng đợi",
+  "queueNext": "Sẽ phát tiếp theo"
 }
