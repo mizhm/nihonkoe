@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:just_audio/just_audio.dart';
 
 enum EngineState { idle, loading, buffering, ready, completed }
@@ -62,7 +64,7 @@ class JustAudioEngine implements AudioEngine {
 
   // Not awaited: just_audio's play() completes only when playback stops.
   @override
-  void play() => _player.play();
+  void play() => unawaited(_player.play().catchError((Object _) {})); // failures arrive on errorStream
 
   @override
   Future<void> pause() => _player.pause();

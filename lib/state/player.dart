@@ -15,9 +15,11 @@ final positionProvider = StreamProvider.autoDispose<Duration>((ref) => ref.watch
 
 final positionsRepoProvider = Provider<PositionsRepo>((ref) => PositionsRepo(ref.watch(dbProvider)));
 
-/// Saved listening position of a work, for "Resume · mm:ss". Re-reads when the playing item or queue changes.
+final savedPositionsProvider = StreamProvider<int>((ref) => ref.watch(audioHandlerProvider).savedPositions);
+
+/// Saved listening position of a work, for "Resume · mm:ss". Re-reads after every position write.
 final inProgressProvider = FutureProvider.autoDispose.family<ResumePoint?, int>((ref, postId) {
-  ref.watch(playerProvider.select((s) => (s.value?.current?.key, s.value?.queue.length)));
+  ref.watch(savedPositionsProvider);
   return ref.watch(positionsRepoProvider).inProgress(postId);
 });
 

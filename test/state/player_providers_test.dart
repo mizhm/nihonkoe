@@ -24,4 +24,21 @@ void main() {
     await pumpEventQueue();
     expect((await c.read(inProgressProvider(1).future))?.seconds, 99);
   });
+
+  test('the Resume time follows a pause, not only a change of item', () async {
+    final positions = MemoryPositions();
+    final engine = FakeEngine();
+    final handler = makeHandler(engine: engine, positions: positions);
+    final c = ProviderContainer.test(overrides: [
+      audioHandlerProvider.overrideWithValue(handler),
+      positionsRepoProvider.overrideWithValue(positions),
+    ]);
+    c.listen(inProgressProvider(1), (_, _) {});
+    await handler.playItems([item(1)]);
+    await pumpEventQueue();
+    engine.position = const Duration(seconds: 30);
+    await handler.pause();
+    await pumpEventQueue();
+    expect((await c.read(inProgressProvider(1).future))?.seconds, 30);
+  });
 }
