@@ -511,9 +511,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get detailDownload => 'Download';
 
   @override
-  String get libraryComingSoon => 'The library arrives in a later build.';
-
-  @override
   String get queueAdded => 'Added to queue';
 
   @override

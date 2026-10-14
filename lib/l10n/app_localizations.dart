@@ -1024,12 +1024,6 @@ abstract class AppLocalizations {
   /// **'Download'**
   String get detailDownload;
 
-  /// No description provided for @libraryComingSoon.
-  ///
-  /// In en, this message translates to:
-  /// **'The library arrives in a later build.'**
-  String get libraryComingSoon;
-
   /// No description provided for @queueAdded.
   ///
   /// In en, this message translates to:

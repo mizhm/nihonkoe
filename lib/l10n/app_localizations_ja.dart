@@ -506,9 +506,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get detailDownload => 'ダウンロード';
 
   @override
-  String get libraryComingSoon => 'ライブラリは今後のビルドで追加されます。';
-
-  @override
   String get queueAdded => 'キューに追加しました';
 
   @override

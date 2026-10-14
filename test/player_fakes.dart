@@ -132,7 +132,8 @@ class MemoryHistory implements HistoryRepo {
   @override
   Future<void> recordPlay(PostRef post) async {
     plays.add(post);
-    _rows[post.id] = HistoryEntry(post: post, playedAt: ++_clock);
+    // Real time (the Library groups by day), nudged so two plays never share a stamp.
+    _rows[post.id] = HistoryEntry(post: post, playedAt: DateTime.now().millisecondsSinceEpoch + ++_clock);
   }
 
   @override
