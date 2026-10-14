@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -10,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 import 'package:nihonkoe/api/models.dart';
 import 'package:nihonkoe/l10n/app_localizations.dart';
+import 'package:nihonkoe/lock/authenticator.dart';
 import 'package:nihonkoe/logic/tags.dart';
 import 'package:nihonkoe/state/core.dart';
 import 'package:nihonkoe/player/handler.dart';
@@ -126,6 +128,7 @@ Future<List<Override>> testOverrides({
   MemoryFavorites? favorites,
   MemoryHistory? history,
   MemoryRatings? ratings,
+  Authenticator? authenticator,
 }) async {
   final h = history ?? MemoryHistory();
   SharedPreferences.setMockInitialValues(prefs);
@@ -138,6 +141,7 @@ Future<List<Override>> testOverrides({
     favoritesRepoProvider.overrideWithValue(favorites ?? MemoryFavorites()),
     historyRepoProvider.overrideWithValue(h),
     ratingsRepoProvider.overrideWithValue(ratings ?? MemoryRatings()),
+    authenticatorProvider.overrideWithValue(authenticator ?? FakeAuthenticator()),
     positionsRepoProvider.overrideWithValue(positions ?? MemoryPositions()),
     tagIndexProvider.overrideWith((ref, index) => loadTagIndex?.call(index) ?? Future.value(tagIndex)),
   ];
@@ -160,4 +164,23 @@ Future<void> pumpRouted(WidgetTester tester, Widget child, {List<Override> overr
       ),
     ),
   );
+}
+
+class FakeAuthenticator implements Authenticator {
+  FakeAuthenticator({this.available = true, List<AuthResult>? results}) : results = results ?? [AuthResult.success];
+  bool available;
+  final List<AuthResult> results; // returned in order; the last one repeats
+  int calls = 0;
+  Completer<void>? gate; // holds authenticate() open, like the system dialog
+
+  @override
+  Future<bool> isAvailable() async => available;
+
+  @override
+  Future<AuthResult> authenticate(String reason) async {
+    final r = results[calls < results.length ? calls : results.length - 1];
+    calls++;
+    if (gate != null) await gate!.future;
+    return r;
+  }
 }

@@ -1,6 +1,8 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
+import '../../lock/lock_gate.dart';
 import '../../logic/i18n.dart';
 import '../../state/settings.dart';
 import '../l10n.dart';
@@ -65,6 +67,21 @@ class SettingsScreen extends ConsumerWidget {
                   DropdownMenuEntry(value: lang, label: _languageNames[lang] ?? l.languageSystem),
               ],
             ),
+          ),
+          ListTile(title: Text(l.settingsPrivacySection, style: TextStyle(color: Theme.of(context).colorScheme.primary))),
+          SwitchListTile(
+            secondary: const Icon(Symbols.visibility_off),
+            title: Text(l.settingsPrivacy),
+            subtitle: Text(l.settingsPrivacyHint),
+            value: settings.privacy,
+            onChanged: notifier.setPrivacy,
+          ),
+          SwitchListTile(
+            secondary: const Icon(Symbols.lock),
+            title: Text(l.settingsLock),
+            subtitle: Text(l.settingsLockHint),
+            value: settings.appLock,
+            onChanged: (v) => setAppLockSecurely(context, ref, v),
           ),
         ],
       ),

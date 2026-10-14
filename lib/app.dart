@@ -3,6 +3,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'l10n/app_localizations.dart';
+import 'lock/lock_gate.dart';
 import 'logic/i18n.dart';
 import 'router.dart';
 import 'state/privacy.dart';
@@ -39,6 +40,7 @@ class NihonkoeApp extends ConsumerWidget {
           localizationsDelegates: const [AppLocalizations.delegate, ...GlobalMaterialLocalizations.delegates],
           supportedLocales: AppLocalizations.supportedLocales,
           routerConfig: router,
+          builder: (context, child) => LockGate(child: child ?? const SizedBox.shrink()),
         );
       },
     );
