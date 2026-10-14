@@ -1,5 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 
+import '../api/models.dart';
+import '../logic/position.dart';
+
 const _postColumns = 'post_id INTEGER PRIMARY KEY, title TEXT NOT NULL, cover TEXT, cv TEXT, rj_code TEXT, circle TEXT';
 
 Future<void> createSchema(Database db, int version) async {
@@ -57,3 +60,45 @@ String _fold(String s) => String.fromCharCodes(s.runes.map((c) => switch (c) {
       >= 0xFF01 && <= 0xFF5E => c - 0xFEE0,
       _ => c,
     })).toLowerCase();
+
+class PositionsRepo {
+  PositionsRepo(this._db, {int Function()? now}) : _now = now ?? (() => DateTime.now().millisecondsSinceEpoch);
+  final Database _db;
+  final int Function() _now;
+
+  Future<double?> get(String key) async {
+    final rows = await _db.query('positions', columns: ['seconds'], where: 'key = ?', whereArgs: [key]);
+    return rows.isEmpty ? null : (rows.single['seconds']! as num).toDouble();
+  }
+
+  /// `null` clears the position (the stream was finished).
+  Future<void> save(String key, double? seconds) => seconds == null
+      ? _db.delete('positions', where: 'key = ?', whereArgs: [key])
+      : _db.insert('positions', {'key': key, 'seconds': seconds, 'updated_at': _now()},
+          conflictAlgorithm: ConflictAlgorithm.replace);
+
+  Future<double?> inProgress(int postId) async {
+    final rows = await _db.query('positions', columns: ['key', 'seconds'], where: 'key LIKE ?', whereArgs: ['$postId:%']);
+    return inProgressPosition({for (final r in rows) r['key']! as String: (r['seconds']! as num).toDouble()}, postId);
+  }
+}
+
+class HistoryRepo {
+  HistoryRepo(this._db, {int Function()? now}) : _now = now ?? (() => DateTime.now().millisecondsSinceEpoch);
+  final Database _db;
+  final int Function() _now;
+
+  Future<void> recordPlay(PostRef post) => _db.insert(
+        'history',
+        {
+          'post_id': post.id,
+          'title': post.title,
+          'cover': post.cover,
+          'cv': post.cv,
+          'rj_code': post.rjCode,
+          'circle': post.circle,
+          'played_at': _now(),
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+}
