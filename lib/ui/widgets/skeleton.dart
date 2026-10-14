@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 class Skeleton extends StatelessWidget {
   const Skeleton({super.key, this.width, this.height, this.radius = 12});
