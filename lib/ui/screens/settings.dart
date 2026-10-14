@@ -1,9 +1,13 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../lock/lock_gate.dart';
 import '../../logic/i18n.dart';
+import '../../state/core.dart';
+import '../../state/library.dart';
+import '../../state/posts.dart';
 import '../../state/settings.dart';
 import '../l10n.dart';
 
@@ -83,8 +87,54 @@ class SettingsScreen extends ConsumerWidget {
             value: settings.appLock,
             onChanged: (v) => setAppLockSecurely(context, ref, v),
           ),
+          ListTile(title: Text(l.settingsStorage, style: TextStyle(color: Theme.of(context).colorScheme.primary))),
+          ListTile(
+            leading: const Icon(Symbols.image),
+            title: Text(l.settingsClearImageCache),
+            onTap: () => _run(context, ref.read(imageCacheClearerProvider)()),
+          ),
+          ListTile(
+            leading: const Icon(Symbols.sell),
+            title: Text(l.settingsReloadTags),
+            onTap: () => _run(context, clearTagIndexCache(ref)),
+          ),
+          ListTile(
+            leading: Icon(Symbols.delete, color: Theme.of(context).colorScheme.error),
+            title: Text(l.settingsClearHistory, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            onTap: () async {
+              final ok = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: Text(l.libraryClearConfirm),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: Text(l.commonCancel)),
+                    FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(l.libraryClear)),
+                  ],
+                ),
+              );
+              if (ok == true && context.mounted) await _run(context, ref.read(libraryProvider.notifier).clearHistory());
+            },
+          ),
+          ListTile(title: Text(l.settingsAbout, style: TextStyle(color: Theme.of(context).colorScheme.primary))),
+          ListTile(
+            leading: const Icon(Symbols.code),
+            title: Text(l.settingsSource),
+            subtitle: const Text('github.com/mizhm/nihonkoe'),
+            onTap: () => launchUrl(Uri.parse('https://github.com/mizhm/nihonkoe'), mode: LaunchMode.externalApplication),
+          ),
         ],
       ),
     );
+  }
+}
+
+Future<void> _run(BuildContext context, Future<void> action) async {
+  final messenger = ScaffoldMessenger.of(context);
+  final l = context.l10n;
+  try {
+    await action;
+    messenger.showSnackBar(SnackBar(content: Text(l.settingsDone)));
+  } catch (_) {
+    messenger.showSnackBar(SnackBar(content: Text(l.listErrorTitle)));
   }
 }

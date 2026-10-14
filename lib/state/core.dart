@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/painting.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -44,3 +45,9 @@ extension CacheFor on Ref {
     onDispose(() => timer?.cancel());
   }
 }
+
+/// Clears cached cover images on disk and in memory; overridden in tests.
+final imageCacheClearerProvider = Provider<Future<void> Function()>((ref) => () async {
+      await DefaultCacheManager().emptyCache();
+      PaintingBinding.instance.imageCache.clear();
+    });

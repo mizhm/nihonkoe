@@ -129,6 +129,7 @@ Future<List<Override>> testOverrides({
   MemoryHistory? history,
   MemoryRatings? ratings,
   Authenticator? authenticator,
+  Future<void> Function()? imageCacheClearer,
 }) async {
   final h = history ?? MemoryHistory();
   SharedPreferences.setMockInitialValues(prefs);
@@ -142,6 +143,7 @@ Future<List<Override>> testOverrides({
     historyRepoProvider.overrideWithValue(h),
     ratingsRepoProvider.overrideWithValue(ratings ?? MemoryRatings()),
     authenticatorProvider.overrideWithValue(authenticator ?? FakeAuthenticator()),
+    imageCacheClearerProvider.overrideWithValue(imageCacheClearer ?? () async {}),
     positionsRepoProvider.overrideWithValue(positions ?? MemoryPositions()),
     tagIndexProvider.overrideWith((ref, index) => loadTagIndex?.call(index) ?? Future.value(tagIndex)),
   ];

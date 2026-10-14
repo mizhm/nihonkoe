@@ -97,3 +97,13 @@ final tagNamerProvider = Provider.autoDispose<TagNamer>((ref) => makeTagNamer(
       ref.watch(tagIndexProvider(TagIndex.tags)).value,
       ref.watch(tagIndexProvider(TagIndex.cv)).value,
     ));
+
+/// Drops the on-disk tag and voice-actor indexes so the next read fetches fresh ones.
+Future<void> clearTagIndexCache(WidgetRef ref) async {
+  final dir = await ref.read(cacheDirProvider.future);
+  for (final index in TagIndex.values) {
+    final file = File('${dir.path}/tag-index-${index.name}.json');
+    if (await file.exists()) await file.delete();
+    ref.invalidate(tagIndexProvider(index));
+  }
+}
