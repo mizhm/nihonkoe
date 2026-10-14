@@ -22,7 +22,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         // Above every versionCode the Expo build used, so this installs over it.
         versionCode = 10000 + (System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1)
-        versionName = System.getenv("APP_VERSION")?.removePrefix("v") ?: flutter.versionName
+        // workflow_dispatch passes APP_VERSION="" (no tag), which must fall back too.
+        versionName = System.getenv("APP_VERSION")?.removePrefix("v")?.takeIf { it.isNotBlank() } ?: flutter.versionName
     }
 
     signingConfigs {
