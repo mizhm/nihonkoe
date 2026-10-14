@@ -37,7 +37,7 @@ void main() {
   });
 
   test('the post-launch theme is AppCompat too (biometric dialog on API 24-27)', () {
-    for (final f in ['values', 'values-night']) {
+    for (final f in ['values', 'values-night', 'values-v31', 'values-night-v31']) {
       final styles = File('android/app/src/main/res/$f/styles.xml').readAsStringSync();
       expect(styles, contains('name="NormalTheme" parent="Theme.AppCompat'), reason: f);
     }

@@ -40,7 +40,31 @@ dev_dependencies:
   sqflite_common_ffi: ^2.4.4
   local_auth_platform_interface: ^1.1.0
   fake_async: ^1.3.3
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
 
 flutter:
   uses-material-design: true
   generate: true
+
+# Launcher icon and splash: the 声 logo in sakura (same artwork as the Expo app).
+# Regenerate with `dart run flutter_launcher_icons` and `dart run flutter_native_splash:create`.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/brand/icon.png
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: assets/brand/android-icon-foreground.png
+  adaptive_icon_monochrome: assets/brand/android-icon-monochrome.png
+  # The Expo artwork already carries its safe-zone padding.
+  adaptive_icon_foreground_inset: 0
+  min_sdk_android: 24
+
+flutter_native_splash:
+  color: "#FFFFFF"
+  image: assets/brand/splash-icon.png
+  android_12:
+    color: "#FFFFFF"
+    image: assets/brand/splash-icon.png
+  ios: false
+  web: false

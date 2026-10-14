@@ -31,6 +31,8 @@ Future<void> main() async {
     config: const AudioServiceConfig(
       androidNotificationChannelId: 'dev.local.nihonkoe.playback',
       androidNotificationChannelName: 'Playback',
+      // White silhouette for the status bar; the colour launcher icon would show as a blank square.
+      androidNotificationIcon: 'drawable/ic_stat_nihonkoe',
       fastForwardInterval: Duration(seconds: 30),
       rewindInterval: Duration(seconds: 15),
     ),
