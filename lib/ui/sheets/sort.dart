@@ -16,24 +16,29 @@ Future<ListSort?> showSortSheet(BuildContext context, ListSort current) {
     ListSort.popularAll: l.sortPopularAll,
   };
   Widget option(BuildContext context, ListSort sort) => ListTile(
-        title: Text(labels[sort]!),
-        selected: sort == current,
-        trailing: sort == current ? const Icon(Symbols.check) : null,
-        onTap: () => Navigator.pop(context, sort),
-      );
+    title: Text(labels[sort]!),
+    selected: sort == current,
+    trailing: sort == current ? const Icon(Symbols.check) : null,
+    onTap: () => Navigator.pop(context, sort),
+  );
   return showModalBottomSheet<ListSort>(
     context: context,
     useRootNavigator: true,
     showDragHandle: true,
+    // Nine options are taller than the default 9/16-screen sheet on small phones.
+    isScrollControlled: true,
     builder: (context) => SafeArea(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ListTile(title: Text(l.sortHeading, style: Theme.of(context).textTheme.titleMedium)),
-          for (final s in [ListSort.newest, ListSort.oldest, ListSort.title]) option(context, s),
-          ListTile(dense: true, title: Text(l.sortPopular)),
-          for (final s in [ListSort.popularWeek, ListSort.popularMonth, ListSort.popularYear, ListSort.popularAll]) option(context, s),
-        ],
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(title: Text(l.sortHeading, style: Theme.of(context).textTheme.titleMedium)),
+            for (final s in [ListSort.newest, ListSort.oldest, ListSort.title]) option(context, s),
+            ListTile(dense: true, title: Text(l.sortPopular)),
+            for (final s in [ListSort.popularWeek, ListSort.popularMonth, ListSort.popularYear, ListSort.popularAll])
+              option(context, s),
+          ],
+        ),
       ),
     ),
   );
