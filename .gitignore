@@ -49,3 +49,6 @@ app.*.map.json
 # superpowers workspace and design docs (kept locally, not versioned)
 .superpowers/
 docs/superpowers/
+
+# Gradle output of the Android host project
+/android/build/
