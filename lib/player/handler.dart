@@ -45,17 +45,16 @@ class PlayerSnapshot {
     double? rate,
     SleepTimer? sleep,
     Object? error = _keep,
-  }) =>
-      PlayerSnapshot(
-        queue: queue ?? this.queue,
-        ordered: ordered ?? this.ordered,
-        index: index ?? this.index,
-        repeat: repeat ?? this.repeat,
-        shuffle: shuffle ?? this.shuffle,
-        rate: rate ?? this.rate,
-        sleep: sleep ?? this.sleep,
-        error: identical(error, _keep) ? this.error : error as String?,
-      );
+  }) => PlayerSnapshot(
+    queue: queue ?? this.queue,
+    ordered: ordered ?? this.ordered,
+    index: index ?? this.index,
+    repeat: repeat ?? this.repeat,
+    shuffle: shuffle ?? this.shuffle,
+    rate: rate ?? this.rate,
+    sleep: sleep ?? this.sleep,
+    error: identical(error, _keep) ? this.error : error as String?,
+  );
 }
 
 class PlaybackInfo {
@@ -110,6 +109,10 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   double _lastPosition = 0;
   bool _wasPlaying = false;
   int _loadToken = 0;
+  // False from the start of a load until the new item's saved position is read: until then
+  // just_audio still reports the previous source's position, which must never be saved for this item.
+  bool _positionKnown = true;
+  EngineStatus _lastStatus = const EngineStatus(playing: false, state: EngineState.idle);
   EngineState _lastState = EngineState.idle;
 
   void _emit(PlayerSnapshot next) => _state.add(next);
@@ -122,24 +125,32 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
     if (index < 0 || index >= s.queue.length) return;
     final item = s.queue[index];
     final token = ++_loadToken;
+    _positionKnown = false;
     _emit(s.copyWith(index: index, error: null, sleep: s.sleep is SleepAtPosition ? const SleepOff() : null));
     _ended = false;
     final saved = startAt != null ? _seconds(startAt) : await _positions.get(item.key);
     if (token != _loadToken) return;
-    _pendingSeek = saved;
+    _pendingSeek = saved ?? 0;
+    _positionKnown = true;
     _lastSaved = saved ?? 0;
     _lastPosition = saved ?? 0;
-    mediaItem.add(_mediaItemFor(item, null));
     unawaited(_history.recordPlay(item.post).catchError((Object _) {}));
     try {
+      mediaItem.add(_mediaItemFor(item, null));
+      // just_audio keeps playing across a source change; pause so the new work isn't heard from 0 before its seek.
+      if (_engine.playing) await _engine.pause();
+      if (token != _loadToken) return;
       final duration = await _engine.load(item.url, mediaHeaders);
       if (token != _loadToken) return;
       if (saved != null) {
-        await _engine.seek(_duration(startAt != null ? saved : resumeTarget(saved, _seconds(duration ?? Duration.zero))));
+        await _engine.seek(
+          _duration(startAt != null ? saved : resumeTarget(saved, _seconds(duration ?? Duration.zero))),
+        );
       }
       if (token != _loadToken) return;
       _pendingSeek = null;
       await _engine.setSpeed(snapshot.rate);
+      if (token != _loadToken) return;
       mediaItem.add(_mediaItemFor(item, duration));
       _engine.play();
     } catch (error) {
@@ -148,19 +159,19 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   }
 
   MediaItem _mediaItemFor(QueueItem item, Duration? duration) => MediaItem(
-        id: item.key,
-        title: item.title,
-        artist: item.post.cv,
-        album: item.post.circle,
-        artUri: item.post.cover == null ? null : Uri.parse(item.post.cover!),
-        artHeaders: mediaHeaders,
-        duration: duration,
-      );
+    id: item.key,
+    title: item.title,
+    artist: item.post.cv,
+    album: item.post.circle,
+    artUri: item.post.cover == null ? null : Uri.parse(item.post.cover!),
+    artHeaders: mediaHeaders,
+    duration: duration,
+  );
 
   /// Saves where the current item is, so switching works or stopping never loses more than nothing.
   Future<void> _saveCurrent() async {
     final item = snapshot.current;
-    if (item == null) return;
+    if (item == null || !_positionKnown) return;
     final at = stopPosition(_pendingSeek, _seconds(_engine.position), _ended);
     if (at != null) await _positions.save(item.key, at);
   }
@@ -178,16 +189,23 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
     }
     await _saveCurrent();
     final s = snapshot;
-    _emit(s.copyWith(ordered: items, queue: s.shuffle ? shuffleKeepingCurrent(items, start, random: _random) : items));
+    _emit(
+      s.copyWith(
+        ordered: items,
+        queue: s.shuffle ? shuffleKeepingCurrent(items, start, random: _random) : items,
+      ),
+    );
     await _load(s.shuffle ? 0 : start, startAt: startAt);
   }
 
   @override
   Future<void> play() async {
     if (snapshot.current == null) return;
+    final token = _loadToken;
     if (_ended) {
       _ended = false;
       await _engine.seek(Duration.zero);
+      if (token != _loadToken || snapshot.current == null) return;
     }
     _engine.play();
   }
@@ -211,9 +229,10 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   Future<void> stop() async {
     // Clear first so the UI drops the player in the same frame as the gesture that stopped it.
     final item = snapshot.current;
-    final at = item == null ? null : stopPosition(_pendingSeek, _seconds(_engine.position), _ended);
+    final at = item == null || !_positionKnown ? null : stopPosition(_pendingSeek, _seconds(_engine.position), _ended);
     _loadToken++;
     _pendingSeek = null;
+    _positionKnown = true;
     _emit(snapshot.copyWith(queue: const [], ordered: const [], index: -1, error: null, sleep: const SleepOff()));
     mediaItem.add(null);
     if (item != null && at != null) await _positions.save(item.key, at);
@@ -223,7 +242,9 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
 
   void _tick(double position) {
     final item = snapshot.current;
-    if (item == null || _pendingSeek != null) return;
+    // Nothing to track while loading, after the end (the position sits at the duration) or after an error
+    // (just_audio's position is stale then; Retry needs the last good one).
+    if (item == null || !_positionKnown || _pendingSeek != null || _ended || snapshot.error != null) return;
     _lastPosition = position;
     final playing = _engine.playing;
     final action = sleepAction(snapshot.sleep, _now(), item.key, position, _wasPlaying || playing);
@@ -239,43 +260,59 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
   @visibleForTesting
   void tickForTest() => _tick(_seconds(_engine.position));
 
-
   void _onStatus(EngineStatus status) {
-    _playback.add(PlaybackInfo(
-      playing: status.playing,
-      buffering: status.state == EngineState.loading || status.state == EngineState.buffering,
-      duration: status.duration,
-    ));
-    playbackState.add(PlaybackState(
-      controls: [
-        MediaControl.skipToPrevious,
-        status.playing ? MediaControl.pause : MediaControl.play,
-        MediaControl.skipToNext,
-      ],
-      systemActions: const {MediaAction.seek, MediaAction.seekForward, MediaAction.seekBackward},
-      androidCompactActionIndices: const [0, 1, 2],
-      processingState: switch (status.state) {
-        EngineState.idle => AudioProcessingState.idle,
-        EngineState.loading => AudioProcessingState.loading,
-        EngineState.buffering => AudioProcessingState.buffering,
-        EngineState.ready => AudioProcessingState.ready,
-        EngineState.completed => AudioProcessingState.completed,
-      },
-      playing: status.playing,
-      updatePosition: _engine.position,
-      bufferedPosition: status.buffered,
-      speed: snapshot.rate,
-      queueIndex: snapshot.index < 0 ? null : snapshot.index,
-    ));
+    _playback.add(
+      PlaybackInfo(
+        playing: status.playing,
+        buffering: status.state == EngineState.loading || status.state == EngineState.buffering,
+        duration: status.duration,
+      ),
+    );
+    _lastStatus = status;
+    _broadcast();
     if (status.state == EngineState.completed && _lastState != EngineState.completed) {
       final item = snapshot.current;
-      if (item != null) unawaited(_finish(item));
+      if (item != null) unawaited(_finish(item).catchError((Object e) => _onError(e)));
     }
     _lastState = status.state;
   }
 
+  void _broadcast() {
+    final status = _lastStatus;
+    final error = snapshot.error;
+    playbackState.add(
+      PlaybackState(
+        controls: [
+          MediaControl.skipToPrevious,
+          status.playing ? MediaControl.pause : MediaControl.play,
+          MediaControl.skipToNext,
+        ],
+        systemActions: const {MediaAction.seek, MediaAction.seekForward, MediaAction.seekBackward},
+        androidCompactActionIndices: const [0, 1, 2],
+        // An error keeps the notification (audio_service stops the service on idle) and shows the failure.
+        processingState: error != null
+            ? AudioProcessingState.error
+            : switch (status.state) {
+                EngineState.idle => AudioProcessingState.idle,
+                EngineState.loading => AudioProcessingState.loading,
+                EngineState.buffering => AudioProcessingState.buffering,
+                EngineState.ready => AudioProcessingState.ready,
+                EngineState.completed => AudioProcessingState.completed,
+              },
+        playing: status.playing,
+        updatePosition: _engine.position,
+        bufferedPosition: status.buffered,
+        speed: snapshot.rate,
+        queueIndex: snapshot.index < 0 ? null : snapshot.index,
+        errorMessage: error,
+      ),
+    );
+  }
+
   Future<void> _finish(QueueItem item) async {
+    final token = _loadToken;
     await _positions.save(item.key, null);
+    if (token != _loadToken) return; // the user jumped or stopped meanwhile
     final s = snapshot;
     switch (finishAction(s.queue, s.index, s.repeat, s.sleep)) {
       case FinishStop():
@@ -284,7 +321,7 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
         if (s.sleep is SleepItemEnd) _emit(snapshot.copyWith(sleep: const SleepOff()));
       case FinishRestart():
         await _engine.seek(Duration.zero);
-        _engine.play();
+        if (token == _loadToken) _engine.play();
       case FinishLoad(:final index):
         await _load(index, startAt: Duration.zero);
     }
@@ -300,10 +337,12 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
     final s = snapshot;
     final current = s.current;
     if (current == null) return playItems(items);
-    _emit(s.copyWith(
-      queue: insertNext(s.queue, s.index, items),
-      ordered: insertNext(s.ordered, s.ordered.indexWhere((i) => i.key == current.key), items),
-    ));
+    _emit(
+      s.copyWith(
+        queue: insertNext(s.queue, s.index, items),
+        ordered: insertNext(s.ordered, s.ordered.indexWhere((i) => i.key == current.key), items),
+      ),
+    );
   }
 
   Future<void> nextChapter() async {
@@ -390,7 +429,13 @@ class NihonkoeAudioHandler extends BaseAudioHandler {
     await _load(s.index, startAt: _duration(at));
   }
 
-  void _onError(Object error) => _emit(snapshot.copyWith(error: '$error'));
+  void _onError(Object error) {
+    _emit(snapshot.copyWith(error: '$error'));
+    // just_audio leaves `playing` true after an error; pause so the UI and notification show the truth.
+    _wasPlaying = false;
+    unawaited(_engine.pause().catchError((Object _) {}));
+    _broadcast();
+  }
 
   Future<void> dispose() async {
     _ticker?.cancel();

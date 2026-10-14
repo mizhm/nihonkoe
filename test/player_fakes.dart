@@ -11,6 +11,10 @@ class FakeEngine implements AudioEngine {
   Duration? nextDuration = const Duration(hours: 1);
   Object? nextLoadError;
   Completer<void>? loadGate;
+  Completer<void>? speedGate;
+
+  /// Positions from which audio became audible (just_audio keeps playing across a source change).
+  final audibleFrom = <Duration>[];
   double speed = 1;
   EngineState state = EngineState.idle;
   Duration? duration;
@@ -36,8 +40,8 @@ class FakeEngine implements AudioEngine {
   @override
   Future<Duration?> load(String url, Map<String, String> headers) async {
     loads.add((url: url, headers: headers));
+    // Like just_audio: `playing` survives setAudioSource, so a playing player starts the new source at once.
     state = EngineState.loading;
-    playing = false;
     _emit();
     final gate = loadGate;
     if (gate != null) await gate.future;
@@ -50,12 +54,14 @@ class FakeEngine implements AudioEngine {
     position = Duration.zero;
     duration = nextDuration;
     state = EngineState.ready;
+    if (playing) audibleFrom.add(position);
     _emit();
     return duration;
   }
 
   @override
   void play() {
+    if (!playing && state != EngineState.loading) audibleFrom.add(position);
     playing = true;
     _emit();
   }
@@ -73,7 +79,11 @@ class FakeEngine implements AudioEngine {
   }
 
   @override
-  Future<void> setSpeed(double value) async => speed = value;
+  Future<void> setSpeed(double value) async {
+    speed = value;
+    final gate = speedGate;
+    if (gate != null) await gate.future;
+  }
 
   @override
   Future<void> stop() async {
@@ -87,12 +97,19 @@ class FakeEngine implements AudioEngine {
     _position.add(position);
   }
 
+  /// Like just_audio: the position holds at the end and `playing` stays true.
   void complete() {
+    position = duration ?? position;
     state = EngineState.completed;
     _emit();
   }
 
-  void fail(Object error) => _errors.add(error);
+  /// Like just_audio on a mid-stream error: back to idle, `playing` still true, then the error.
+  void fail(Object error) {
+    state = EngineState.idle;
+    _emit();
+    _errors.add(error);
+  }
 }
 
 class MemoryPositions implements PositionsRepo {
