@@ -13,6 +13,7 @@ dependencies:
   dynamic_color: ^2.1.0
   flutter:
     sdk: flutter
+  flutter_cache_manager: ^3.4.5
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^3.4.3
@@ -21,6 +22,7 @@ dependencies:
   http: ^1.6.0
   intl: any
   just_audio: ^0.10.6
+  local_auth: ^3.0.2
   material_symbols_icons: ^4.2960.0
   material_ui: ^1.6.0
   path: ^1.9.1

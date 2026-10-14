@@ -112,7 +112,7 @@
   "settingsLanguage": "言語",
   "settingsPrivacySection": "プライバシー",
   "settingsPrivacy": "プライバシーモード",
-  "settingsPrivacyHint": "カバーをぼかし、アプリ切り替え時に内容を隠します。",
+  "settingsPrivacyHint": "ロック画面を含め、カバー画像をぼかします。",
   "settingsLock": "アプリロック",
   "settingsLockHint": "再度開くときに Face ID・指紋・パスコードを要求します。",
   "layoutSwitch": "表示切替: {name}",
@@ -156,5 +156,6 @@
   "detailDownload": "ダウンロード",
   "libraryComingSoon": "ライブラリは今後のビルドで追加されます。",
   "queueAdded": "キューに追加しました",
-  "queueNext": "次に再生します"
+  "queueNext": "次に再生します",
+  "actionsRemoveFromHistory": "履歴から削除"
 }

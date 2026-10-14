@@ -380,7 +380,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPrivacyHint =>
-      'Blur covers and hide content in the app switcher.';
+      'Blur covers, including on the lock screen.';
 
   @override
   String get settingsLock => 'App lock';
@@ -518,4 +518,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get queueNext => 'Plays next';
+
+  @override
+  String get actionsRemoveFromHistory => 'Remove from history';
 }

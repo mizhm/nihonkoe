@@ -378,7 +378,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsPrivacy => 'プライバシーモード';
 
   @override
-  String get settingsPrivacyHint => 'カバーをぼかし、アプリ切り替え時に内容を隠します。';
+  String get settingsPrivacyHint => 'ロック画面を含め、カバー画像をぼかします。';
 
   @override
   String get settingsLock => 'アプリロック';
@@ -513,4 +513,7 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get queueNext => '次に再生します';
+
+  @override
+  String get actionsRemoveFromHistory => '履歴から削除';
 }

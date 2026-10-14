@@ -775,7 +775,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPrivacyHint.
   ///
   /// In en, this message translates to:
-  /// **'Blur covers and hide content in the app switcher.'**
+  /// **'Blur covers, including on the lock screen.'**
   String get settingsPrivacyHint;
 
   /// No description provided for @settingsLock.
@@ -1041,6 +1041,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Plays next'**
   String get queueNext;
+
+  /// No description provided for @actionsRemoveFromHistory.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from history'**
+  String get actionsRemoveFromHistory;
 }
 
 class _AppLocalizationsDelegate

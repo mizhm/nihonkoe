@@ -192,7 +192,7 @@
   "settingsLanguage": "Language",
   "settingsPrivacySection": "Privacy",
   "settingsPrivacy": "Privacy mode",
-  "settingsPrivacyHint": "Blur covers and hide content in the app switcher.",
+  "settingsPrivacyHint": "Blur covers, including on the lock screen.",
   "settingsLock": "App lock",
   "settingsLockHint": "Require Face ID, fingerprint or passcode when reopening.",
   "layoutSwitch": "Switch layout: {name}",
@@ -241,5 +241,6 @@
   "detailDownload": "Download",
   "libraryComingSoon": "The library arrives in a later build.",
   "queueAdded": "Added to queue",
-  "queueNext": "Plays next"
+  "queueNext": "Plays next",
+  "actionsRemoveFromHistory": "Remove from history"
 }

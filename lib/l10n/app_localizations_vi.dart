@@ -380,8 +380,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsPrivacy => 'Chế độ riêng tư';
 
   @override
-  String get settingsPrivacyHint =>
-      'Làm mờ ảnh bìa và che nội dung khi chuyển ứng dụng.';
+  String get settingsPrivacyHint => 'Làm mờ ảnh bìa, kể cả trên màn hình khoá.';
 
   @override
   String get settingsLock => 'Khoá ứng dụng';
@@ -519,4 +518,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get queueNext => 'Sẽ phát tiếp theo';
+
+  @override
+  String get actionsRemoveFromHistory => 'Xoá khỏi lịch sử';
 }

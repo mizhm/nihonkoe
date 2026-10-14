@@ -112,7 +112,7 @@
   "settingsLanguage": "Ngôn ngữ",
   "settingsPrivacySection": "Riêng tư",
   "settingsPrivacy": "Chế độ riêng tư",
-  "settingsPrivacyHint": "Làm mờ ảnh bìa và che nội dung khi chuyển ứng dụng.",
+  "settingsPrivacyHint": "Làm mờ ảnh bìa, kể cả trên màn hình khoá.",
   "settingsLock": "Khoá ứng dụng",
   "settingsLockHint": "Yêu cầu Face ID, vân tay hoặc mật khẩu khi mở lại.",
   "layoutSwitch": "Đổi kiểu hiển thị: {name}",
@@ -156,5 +156,6 @@
   "detailDownload": "Tải về",
   "libraryComingSoon": "Thư viện sẽ có ở bản sau.",
   "queueAdded": "Đã thêm vào hàng đợi",
-  "queueNext": "Sẽ phát tiếp theo"
+  "queueNext": "Sẽ phát tiếp theo",
+  "actionsRemoveFromHistory": "Xoá khỏi lịch sử"
 }

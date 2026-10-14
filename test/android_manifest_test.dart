@@ -28,4 +28,11 @@ void main() {
     final activity = File('android/app/src/main/kotlin/dev/local/nihonkoe/MainActivity.kt').readAsStringSync();
     expect(activity, contains('AudioServiceFragmentActivity'));
   });
+
+  test('local_auth: USE_BIOMETRIC permission and an AppCompat launch theme', () {
+    final manifest = File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
+    expect(manifest, contains('android.permission.USE_BIOMETRIC'));
+    final styles = File('android/app/src/main/res/values/styles.xml').readAsStringSync();
+    expect(styles, contains('name="LaunchTheme" parent="Theme.AppCompat'));
+  });
 }
