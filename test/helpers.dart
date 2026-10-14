@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:nihonkoe/api/models.dart';
 import 'package:nihonkoe/l10n/app_localizations.dart';
 import 'package:nihonkoe/logic/tags.dart';
 import 'package:nihonkoe/state/core.dart';
@@ -114,6 +115,7 @@ Future<List<Override>> testOverrides({
   http.Client? client,
   Map<String, Object> prefs = const {'language': 'en'},
   List<TagIndexItem> tagIndex = const [],
+  Future<List<TagIndexItem>> Function(TagIndex index)? loadTagIndex,
 }) async {
   SharedPreferences.setMockInitialValues(prefs);
   final sharedPrefs = await SharedPreferences.getInstance();
@@ -121,7 +123,7 @@ Future<List<Override>> testOverrides({
     prefsProvider.overrideWithValue(sharedPrefs),
     httpClientProvider.overrideWithValue(client ?? mockHttp({})),
     imageProviderFactory.overrideWithValue((_) => MemoryImage(transparentPng)),
-    tagIndexProvider.overrideWith((ref, index) async => tagIndex),
+    tagIndexProvider.overrideWith((ref, index) => loadTagIndex?.call(index) ?? Future.value(tagIndex)),
   ];
 }
 

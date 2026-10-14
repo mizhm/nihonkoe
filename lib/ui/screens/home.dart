@@ -45,6 +45,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           for (final key in {latestKey, hotWeek, hotMonth, requested, feedKey}) {
             ref.invalidate(postListProvider(key));
           }
+          // The tag index is kept for the session; a launch while the site was down would otherwise stick.
+          for (final index in TagIndex.values) {
+            if (ref.read(tagIndexProvider(index)).hasError) ref.invalidate(tagIndexProvider(index));
+          }
           try {
             await ref.read(postListProvider(feedKey).future);
           } catch (_) {

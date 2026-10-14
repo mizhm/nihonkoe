@@ -85,4 +85,25 @@ void main() {
     expect(find.text(en.listRefreshFailed), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('pull-to-refresh retries a tag index that failed at launch', (tester) async {
+    await tallScreen(tester);
+    var calls = 0;
+    var siteUp = false;
+    await pumpRouted(tester, const HomeScreen(),
+        overrides: await testOverrides(
+          client: mockHttp(routes(home)),
+          loadTagIndex: (_) async {
+            calls++;
+            if (!siteUp) throw Exception('site down');
+            return const [];
+          },
+        ));
+    await tester.pumpAndSettle();
+    final failedCalls = calls;
+    siteUp = true;
+    tester.state<RefreshIndicatorState>(find.byType(RefreshIndicator)).show();
+    await tester.pumpAndSettle();
+    expect(calls, greaterThan(failedCalls));
+  });
 }
