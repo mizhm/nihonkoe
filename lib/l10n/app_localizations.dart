@@ -124,12 +124,6 @@ abstract class AppLocalizations {
   /// **'Settings'**
   String get tabsSettings;
 
-  /// No description provided for @feedLatest.
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get feedLatest;
-
   /// No description provided for @feedRequested.
   ///
   /// In en, this message translates to:
@@ -958,11 +952,17 @@ abstract class AppLocalizations {
   /// **'Latest'**
   String get homeLatest;
 
-  /// No description provided for @commonSeeAll.
+  /// No description provided for @homeFeedPick.
   ///
   /// In en, this message translates to:
-  /// **'See all'**
-  String get commonSeeAll;
+  /// **'Choose feed'**
+  String get homeFeedPick;
+
+  /// No description provided for @sortFixedHot.
+  ///
+  /// In en, this message translates to:
+  /// **'Hot lists are already ordered by views'**
+  String get sortFixedHot;
 
   /// No description provided for @actionsPlayNow.
   ///

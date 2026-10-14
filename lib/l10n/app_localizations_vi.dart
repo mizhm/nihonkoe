@@ -22,9 +22,6 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tabsSettings => 'Cài đặt';
 
   @override
-  String get feedLatest => 'Tất cả';
-
-  @override
   String get feedRequested => 'Được yêu cầu';
 
   @override
@@ -478,7 +475,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeLatest => 'Mới nhất';
 
   @override
-  String get commonSeeAll => 'Xem tất cả';
+  String get homeFeedPick => 'Chọn danh sách';
+
+  @override
+  String get sortFixedHot => 'Danh sách hot đã xếp theo lượt xem';
 
   @override
   String get actionsPlayNow => 'Phát ngay';

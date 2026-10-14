@@ -22,9 +22,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tabsSettings => 'Settings';
 
   @override
-  String get feedLatest => 'All';
-
-  @override
   String get feedRequested => 'Requested';
 
   @override
@@ -478,7 +475,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeLatest => 'Latest';
 
   @override
-  String get commonSeeAll => 'See all';
+  String get homeFeedPick => 'Choose feed';
+
+  @override
+  String get sortFixedHot => 'Hot lists are already ordered by views';
 
   @override
   String get actionsPlayNow => 'Play now';

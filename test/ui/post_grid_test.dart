@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:nihonkoe/api/client.dart';
 import 'package:nihonkoe/api/models.dart';
 import 'package:nihonkoe/ui/widgets/post_grid.dart';
-import 'package:nihonkoe/ui/widgets/post_row.dart';
 
 import '../helpers.dart';
 
@@ -47,15 +46,5 @@ void main() {
     await tester.longPress(find.text('Post 1'));
     await tester.pumpAndSettle();
     expect(find.text(en.actionsOpenWeb), findsOneWidget);
-  });
-
-  testWidgets('an empty row hides itself', (tester) async {
-    await pumpRouted(
-      tester,
-      const Scaffold(body: PostRow(title: 'Hot', listKey: key, seeAllPath: '/results')),
-      overrides: await testOverrides(client: mockHttp({listUrl(key.query): listHtml([])})),
-    );
-    await tester.pumpAndSettle();
-    expect(find.text('Hot'), findsNothing);
   });
 }

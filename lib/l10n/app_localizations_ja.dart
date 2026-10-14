@@ -22,9 +22,6 @@ class AppLocalizationsJa extends AppLocalizations {
   String get tabsSettings => '設定';
 
   @override
-  String get feedLatest => 'すべて';
-
-  @override
   String get feedRequested => 'リクエスト';
 
   @override
@@ -473,7 +470,10 @@ class AppLocalizationsJa extends AppLocalizations {
   String get homeLatest => '新着';
 
   @override
-  String get commonSeeAll => 'すべて表示';
+  String get homeFeedPick => 'リストを選択';
+
+  @override
+  String get sortFixedHot => '人気リストは再生数順で固定です';
 
   @override
   String get actionsPlayNow => '今すぐ再生';

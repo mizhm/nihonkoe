@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:nihonkoe/state/core.dart';
 import 'package:nihonkoe/state/posts.dart';
 import 'package:nihonkoe/api/client.dart';
 import 'package:nihonkoe/api/models.dart';
@@ -28,15 +29,47 @@ Future<void> tallScreen(WidgetTester tester) async {
 void main() {
   final home = File('test/fixtures/home.html').readAsStringSync();
 
-  testWidgets('sections appear in order: featured, hot week, hot month, requested, latest', (tester) async {
+  testWidgets('home shows the featured carousel and one latest list, no extra rows', (tester) async {
     await tallScreen(tester);
     await pumpRouted(tester, const HomeScreen(), overrides: await testOverrides(client: mockHttp(routes(home))));
     await tester.pumpAndSettle();
-    final order = [en.homeFeatured, en.homeHotWeek, en.homeHotMonth, en.feedRequested, en.homeLatest]
-        .map((t) => tester.getTopLeft(find.text(t).first).dy)
-        .toList();
-    expect(order, orderedEquals([...order]..sort()));
+    expect(find.text(en.homeFeatured), findsOneWidget);
+    expect(find.text(en.homeLatest), findsOneWidget, reason: 'the feed picker names the current feed');
+    expect(find.text(en.homeHotWeek), findsNothing);
+    expect(find.text('Post 101'), findsNothing);
+  });
+
+  testWidgets('picking a feed swaps the list, hides featured and is remembered', (tester) async {
+    await tallScreen(tester);
+    await pumpRouted(tester, const HomeScreen(), overrides: await testOverrides(client: mockHttp(routes(home))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip(en.homeFeedPick));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(en.homeHotWeek).last);
+    await tester.pumpAndSettle();
     expect(find.text('Post 101'), findsOneWidget);
+    expect(find.text(en.homeFeatured), findsNothing);
+    expect(containerOf(tester).read(prefsProvider).getString('homeFeed'), 'hotWeek');
+  });
+
+  testWidgets('the saved feed opens at launch', (tester) async {
+    await tallScreen(tester);
+    await pumpRouted(tester, const HomeScreen(),
+        overrides: await testOverrides(client: mockHttp(routes(home)), prefs: {'language': 'en', 'homeFeed': 'requested'}));
+    await tester.pumpAndSettle();
+    expect(find.text('Post 301'), findsOneWidget);
+    expect(find.text(en.feedRequested), findsOneWidget);
+  });
+
+  testWidgets('hot feeds have a fixed order, so sort explains instead of opening', (tester) async {
+    await tallScreen(tester);
+    await pumpRouted(tester, const HomeScreen(),
+        overrides: await testOverrides(client: mockHttp(routes(home)), prefs: {'language': 'en', 'homeFeed': 'hotMonth'}));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip(en.sortHeading));
+    await tester.pumpAndSettle();
+    expect(find.text(en.sortFixedHot), findsOneWidget);
+    expect(find.text(en.sortNewest), findsNothing);
   });
 
   testWidgets('featured block disappears when the site widget is missing', (tester) async {
@@ -45,7 +78,7 @@ void main() {
     await pumpRouted(tester, const HomeScreen(), overrides: await testOverrides(client: mockHttp(routes(withoutWidget))));
     await tester.pumpAndSettle();
     expect(find.text(en.homeFeatured), findsNothing);
-    expect(find.text(en.homeHotWeek), findsOneWidget);
+    expect(find.text(en.homeLatest), findsOneWidget);
   });
 
   testWidgets('long-press on a featured item opens the actions sheet', (tester) async {

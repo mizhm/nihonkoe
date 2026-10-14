@@ -3,48 +3,52 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../api/models.dart';
+import '../../l10n/app_localizations.dart';
 import '../../logic/layout.dart';
 import '../../state/posts.dart';
 import '../../state/settings.dart';
 import '../l10n.dart';
-import '../links.dart';
 import '../sheets/sort.dart';
 import '../widgets/featured_carousel.dart';
 import '../widgets/post_grid.dart';
-import '../widgets/post_row.dart';
-
-const _feeds = [ListQuery.latest(), ListQuery.category('requested'), ListQuery.category('rating/maniax')];
 
 const _layoutIcons = {CardLayout.grid: Symbols.grid_view, CardLayout.compact: Symbols.apps, CardLayout.list: Symbols.view_list};
 
-class HomeScreen extends ConsumerStatefulWidget {
+const _feedIcons = {
+  HomeFeed.latest: Symbols.new_releases,
+  HomeFeed.hotWeek: Symbols.local_fire_department,
+  HomeFeed.hotMonth: Symbols.trending_up,
+  HomeFeed.requested: Symbols.front_hand,
+  HomeFeed.maniax: Symbols.explicit,
+};
+
+String _feedName(AppLocalizations l, HomeFeed feed) => switch (feed) {
+      HomeFeed.latest => l.homeLatest,
+      HomeFeed.hotWeek => l.homeHotWeek,
+      HomeFeed.hotMonth => l.homeHotMonth,
+      HomeFeed.requested => l.feedRequested,
+      HomeFeed.maniax => l.feedManiax,
+    };
+
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  ConsumerState<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends ConsumerState<HomeScreen> {
-  int _feed = 0;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
+    final scheme = Theme.of(context).colorScheme;
     final settings = ref.watch(settingsProvider);
-    final base = branchBase(context);
-    final feedKey = (query: _feeds[_feed], sort: settings.homeSort);
-    const hotWeek = (query: ListQuery.latest(), sort: ListSort.popularWeek);
-    const hotMonth = (query: ListQuery.latest(), sort: ListSort.popularMonth);
-    const requested = (query: ListQuery.category('requested'), sort: ListSort.newest);
+    final notifier = ref.read(settingsProvider.notifier);
+    final feed = settings.homeFeed;
+    final feedKey = (query: feed.query, sort: feed.fixedSort ?? settings.homeSort);
     final layoutNames = {CardLayout.grid: l.layoutGrid, CardLayout.compact: l.layoutCompact, CardLayout.list: l.layoutList};
 
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
           // Only this screen's lists: other tabs may be deep into their own pages.
-          for (final key in {latestKey, hotWeek, hotMonth, requested, feedKey}) {
-            ref.invalidate(postListProvider(key));
-          }
+          ref.invalidate(postListProvider(feedKey));
+          if (feed == HomeFeed.latest) ref.invalidate(postListProvider(latestKey)); // featured comes from here
           // The tag index is kept for the session; a launch while the site was down would otherwise stick.
           for (final index in TagIndex.values) {
             if (ref.read(tagIndexProvider(index)).hasError) ref.invalidate(tagIndexProvider(index));
@@ -60,77 +64,94 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         },
         child: CustomScrollView(
           slivers: [
-            SliverAppBar.medium(title: Text(l.tabsHome)),
-            const SliverToBoxAdapter(child: FeaturedCarousel()),
-            SliverToBoxAdapter(
-              child: PostRow(
-                title: l.homeHotWeek,
-                listKey: hotWeek,
-                seeAllPath: resultsPath(base, hotWeek.query, sort: hotWeek.sort, title: l.homeHotWeek),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: PostRow(
-                title: l.homeHotMonth,
-                listKey: hotMonth,
-                seeAllPath: resultsPath(base, hotMonth.query, sort: hotMonth.sort, title: l.homeHotMonth),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: PostRow(
-                title: l.feedRequested,
-                listKey: requested,
-                seeAllPath: resultsPath(base, requested.query, title: l.feedRequested),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 8, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l.homeLatest, style: Theme.of(context).textTheme.titleLarge),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: SegmentedButton<int>(
-                              showSelectedIcon: false,
-                              segments: [
-                                ButtonSegment(value: 0, label: Text(l.feedLatest)),
-                                ButtonSegment(value: 1, label: Text(l.feedRequested)),
-                                ButtonSegment(value: 2, label: Text(l.feedManiax)),
-                              ],
-                              selected: {_feed},
-                              onSelectionChanged: (s) => setState(() => _feed = s.single),
-                            ),
-                          ),
-                        ),
-                        IconButton(
-                          tooltip: l.sortHeading,
-                          icon: const Icon(Symbols.sort),
-                          onPressed: () async {
-                            final sort = await showSortSheet(context, settings.homeSort);
-                            if (sort != null) ref.read(settingsProvider.notifier).setHomeSort(sort);
-                          },
-                        ),
-                        IconButton(
-                          tooltip: l.layoutSwitch(layoutNames[settings.cardLayout.next]!),
-                          icon: Icon(_layoutIcons[settings.cardLayout]),
-                          onPressed: ref.read(settingsProvider.notifier).cycleCardLayout,
-                        ),
-                      ],
-                    ),
+            SliverAppBar(
+              pinned: true,
+              titleSpacing: 12,
+              title: _Capsule(
+                child: MenuAnchor(
+                  menuChildren: [
+                    for (final f in HomeFeed.values)
+                      MenuItemButton(
+                        leadingIcon: Icon(_feedIcons[f], fill: f == feed ? 1 : 0),
+                        trailingIcon: f == feed ? const Icon(Symbols.check) : null,
+                        onPressed: () => notifier.setHomeFeed(f),
+                        child: Text(_feedName(l, f)),
+                      ),
                   ],
+                  builder: (context, menu, _) => Tooltip(
+                    message: l.homeFeedPick,
+                    child: InkWell(
+                      customBorder: const StadiumBorder(),
+                      onTap: () => menu.isOpen ? menu.close() : menu.open(),
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 10, 8, 10),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(_feedIcons[feed], size: 20, fill: 1, color: scheme.primary),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(_feedName(l, feed),
+                                  overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleMedium),
+                            ),
+                            const Icon(Symbols.arrow_drop_down),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
               ),
+              actions: [
+                _Capsule(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: l.sortHeading,
+                        icon: Icon(Symbols.sort, color: feed.fixedSort == null ? null : scheme.onSurface.withValues(alpha: 0.38)),
+                        onPressed: () async {
+                          if (feed.fixedSort != null) {
+                            ScaffoldMessenger.of(context)
+                              ..hideCurrentSnackBar()
+                              ..showSnackBar(SnackBar(content: Text(l.sortFixedHot)));
+                            return;
+                          }
+                          final sort = await showSortSheet(context, settings.homeSort);
+                          if (sort != null) notifier.setHomeSort(sort);
+                        },
+                      ),
+                      IconButton(
+                        tooltip: l.layoutSwitch(layoutNames[settings.cardLayout.next]!),
+                        icon: Icon(_layoutIcons[settings.cardLayout]),
+                        onPressed: notifier.cycleCardLayout,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
             ),
+            if (feed == HomeFeed.latest) const SliverToBoxAdapter(child: FeaturedCarousel()),
+            const SliverToBoxAdapter(child: SizedBox(height: 8)),
             PostSliverGrid(listKey: feedKey),
           ],
         ),
       ),
     );
   }
+}
+
+/// A rounded tonal pill holding toolbar controls, as KikoFlu's feed toolbar does.
+class _Capsule extends StatelessWidget {
+  const _Capsule({required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Material(
+        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        shape: const StadiumBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: child,
+      );
 }

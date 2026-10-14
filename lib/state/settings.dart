@@ -25,6 +25,18 @@ enum AccentPref {
   final Color? seed;
 }
 
+enum HomeFeed {
+  latest(ListQuery.latest()),
+  hotWeek(ListQuery.latest(), ListSort.popularWeek),
+  hotMonth(ListQuery.latest(), ListSort.popularMonth),
+  requested(ListQuery.category('requested')),
+  maniax(ListQuery.category('rating/maniax'));
+
+  const HomeFeed(this.query, [this.fixedSort]);
+  final ListQuery query;
+  final ListSort? fixedSort; // hot feeds are defined by their order, so the user's sort doesn't apply
+}
+
 @immutable
 class Settings {
   const Settings({
@@ -33,6 +45,7 @@ class Settings {
     this.language = LanguagePref.system,
     this.cardLayout = CardLayout.grid,
     this.homeSort = ListSort.newest,
+    this.homeFeed = HomeFeed.latest,
     this.privacy = false,
     this.appLock = false,
   });
@@ -41,6 +54,7 @@ class Settings {
   final LanguagePref language;
   final CardLayout cardLayout;
   final ListSort homeSort;
+  final HomeFeed homeFeed;
   final bool privacy; // blur covers, no lock-screen artwork
   final bool appLock;
 
@@ -50,6 +64,7 @@ class Settings {
     LanguagePref? language,
     CardLayout? cardLayout,
     ListSort? homeSort,
+    HomeFeed? homeFeed,
     bool? privacy,
     bool? appLock,
   }) =>
@@ -59,6 +74,7 @@ class Settings {
         language: language ?? this.language,
         cardLayout: cardLayout ?? this.cardLayout,
         homeSort: homeSort ?? this.homeSort,
+        homeFeed: homeFeed ?? this.homeFeed,
         privacy: privacy ?? this.privacy,
         appLock: appLock ?? this.appLock,
       );
@@ -76,6 +92,7 @@ class SettingsNotifier extends Notifier<Settings> {
       language: _byName(LanguagePref.values, p.getString('language'), LanguagePref.system),
       cardLayout: toCardLayout(p.getString('cardLayout')),
       homeSort: toListSort(p.getString('homeSort')),
+      homeFeed: _byName(HomeFeed.values, p.getString('homeFeed'), HomeFeed.latest),
       privacy: p.getBool('privacy') ?? false,
       appLock: p.getBool('appLock') ?? false,
     );
@@ -95,6 +112,7 @@ class SettingsNotifier extends Notifier<Settings> {
   }
 
   void setHomeSort(ListSort v) => _save('homeSort', v.id, state.copyWith(homeSort: v));
+  void setHomeFeed(HomeFeed v) => _save('homeFeed', v.name, state.copyWith(homeFeed: v));
 
   void setPrivacy(bool v) {
     ref.read(prefsProvider).setBool('privacy', v);
