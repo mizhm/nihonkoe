@@ -14,26 +14,36 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    val keystorePath: String? = System.getenv("ANDROID_KEYSTORE_PATH")
+
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "dev.local.nihonkoe"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
-        // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
-        // You can force using the value of versionCode by specifying the `-P force-version-code-ignoring-abi=true`
-        // flag during build.
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        // Above every versionCode the Expo build used, so this installs over it.
+        versionCode = 10000 + (System.getenv("VERSION_CODE")?.toIntOrNull() ?: 1)
+        versionName = System.getenv("APP_VERSION")?.removePrefix("v") ?: flutter.versionName
+    }
+
+    signingConfigs {
+        create("release") {
+            if (keystorePath != null) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANDROID_KEY_ALIAS")
+                keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = when {
+                keystorePath != null -> signingConfigs.getByName("release")
+                // Never ship a debug-signed "release" from CI.
+                System.getenv("CI") != null -> throw GradleException("ANDROID_KEYSTORE_PATH is required for CI release builds")
+                else -> signingConfigs.getByName("debug")
+            }
         }
     }
 }
