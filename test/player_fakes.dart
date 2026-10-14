@@ -1,0 +1,137 @@
+import 'dart:async';
+
+import 'package:nihonkoe/api/models.dart';
+import 'package:nihonkoe/data/db.dart';
+import 'package:nihonkoe/logic/queue.dart';
+import 'package:nihonkoe/player/engine.dart';
+import 'package:nihonkoe/player/handler.dart';
+
+class FakeEngine implements AudioEngine {
+  final loads = <({String url, Map<String, String> headers})>[];
+  Duration? nextDuration = const Duration(hours: 1);
+  Object? nextLoadError;
+  Completer<void>? loadGate;
+  double speed = 1;
+  EngineState state = EngineState.idle;
+  Duration? duration;
+
+  final _position = StreamController<Duration>.broadcast();
+  final _status = StreamController<EngineStatus>.broadcast();
+  final _errors = StreamController<Object>.broadcast();
+
+  @override
+  Duration position = Duration.zero;
+  @override
+  bool playing = false;
+
+  @override
+  Stream<Duration> get positionStream => _position.stream;
+  @override
+  Stream<EngineStatus> get statusStream => _status.stream;
+  @override
+  Stream<Object> get errorStream => _errors.stream;
+
+  void _emit() => _status.add(EngineStatus(playing: playing, state: state, duration: duration, buffered: Duration.zero));
+
+  @override
+  Future<Duration?> load(String url, Map<String, String> headers) async {
+    loads.add((url: url, headers: headers));
+    state = EngineState.loading;
+    playing = false;
+    _emit();
+    final gate = loadGate;
+    if (gate != null) await gate.future;
+    if (nextLoadError case final error?) {
+      nextLoadError = null;
+      state = EngineState.idle;
+      _emit();
+      throw error;
+    }
+    position = Duration.zero;
+    duration = nextDuration;
+    state = EngineState.ready;
+    _emit();
+    return duration;
+  }
+
+  @override
+  void play() {
+    playing = true;
+    _emit();
+  }
+
+  @override
+  Future<void> pause() async {
+    playing = false;
+    _emit();
+  }
+
+  @override
+  Future<void> seek(Duration to) async {
+    position = to;
+    if (state == EngineState.completed) state = EngineState.ready;
+  }
+
+  @override
+  Future<void> setSpeed(double value) async => speed = value;
+
+  @override
+  Future<void> stop() async {
+    playing = false;
+    state = EngineState.idle;
+    _emit();
+  }
+
+  void emitPosition(double seconds) {
+    position = Duration(milliseconds: (seconds * 1000).round());
+    _position.add(position);
+  }
+
+  void complete() {
+    state = EngineState.completed;
+    _emit();
+  }
+
+  void fail(Object error) => _errors.add(error);
+}
+
+class MemoryPositions implements PositionsRepo {
+  final values = <String, double>{};
+  @override
+  Future<double?> get(String key) async => values[key];
+  @override
+  Future<void> save(String key, double? seconds) async => seconds == null ? values.remove(key) : values[key] = seconds;
+  @override
+  Future<double?> inProgress(int postId) async {
+    final first = values['$postId:0'];
+    if (first != null && first > 0) return first;
+    for (final e in values.entries) {
+      if (e.key.startsWith('$postId:') && e.value > 0) return e.value;
+    }
+    return null;
+  }
+}
+
+class MemoryHistory implements HistoryRepo {
+  final plays = <PostRef>[];
+  @override
+  Future<void> recordPlay(PostRef post) async => plays.add(post);
+}
+
+NihonkoeAudioHandler makeHandler({FakeEngine? engine, MemoryPositions? positions, MemoryHistory? history, int Function()? now}) =>
+    NihonkoeAudioHandler(
+      engine: engine ?? FakeEngine(),
+      positions: positions ?? MemoryPositions(),
+      history: history ?? MemoryHistory(),
+      now: now,
+      random: () => 0,
+      tick: false,
+    );
+
+QueueItem item(int id, {int stream = 0, List<Track> chapters = const []}) => QueueItem(
+      key: '$id:$stream',
+      post: PostRef(id: id, title: 'Work $id', cv: 'CV $id', cover: 'https://pic.weeabo0.xyz/$id.jpg'),
+      title: 'Work $id',
+      url: 'https://v.weeab0o.xyz/$id-$stream.m3u8',
+      chapters: chapters,
+    );
