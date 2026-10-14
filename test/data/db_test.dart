@@ -56,4 +56,11 @@ void main() {
     await r.clear();
     expect(await r.list(), isEmpty);
   });
+
+  test('full-width and half-width forms of the same query are one entry (Japanese IME)', () async {
+    final r = repo();
+    await r.push('ＡＳＭＲ　耳かき');
+    await r.push('asmr 耳かき');
+    expect(await r.list(), ['asmr 耳かき']);
+  });
 }

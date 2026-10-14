@@ -32,7 +32,12 @@ class SearchHistoryRepo {
     final q = query.trim();
     if (q.isEmpty) return;
     await _db.transaction((txn) async {
-      await txn.delete('search_history', where: 'lower(query) = lower(?)', whereArgs: [q]);
+      // SQLite's lower() is ASCII-only, so compare folded forms in Dart (the table holds at most [limit] rows).
+      final key = _fold(q);
+      for (final row in await txn.query('search_history', columns: ['query'])) {
+        final existing = row['query']! as String;
+        if (_fold(existing) == key) await txn.delete('search_history', where: 'query = ?', whereArgs: [existing]);
+      }
       await txn.insert('search_history', {'query': q, 'searched_at': _now()});
       await txn.execute(
         'DELETE FROM search_history WHERE rowid NOT IN '
@@ -45,3 +50,10 @@ class SearchHistoryRepo {
 
   Future<void> clear() => _db.delete('search_history');
 }
+
+/// Case- and width-insensitive key: Japanese IMEs type full-width Latin (ＡＳＭＲ) and ideographic spaces.
+String _fold(String s) => String.fromCharCodes(s.runes.map((c) => switch (c) {
+      0x3000 => 0x20,
+      >= 0xFF01 && <= 0xFF5E => c - 0xFEE0,
+      _ => c,
+    })).toLowerCase();

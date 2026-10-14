@@ -12,11 +12,14 @@ import 'package:nihonkoe/state/search_history.dart';
 import '../helpers.dart';
 
 class FakeHistory implements SearchHistoryRepo {
+  FakeHistory({this.failPush = false});
+  final bool failPush;
   final items = <String>[];
   @override
   Future<List<String>> list() async => List.of(items);
   @override
   Future<void> push(String query) async {
+    if (failPush) throw StateError('database is locked');
     final q = query.trim();
     if (q.isEmpty) return;
     items
@@ -73,5 +76,15 @@ void main() {
     expect(find.text('Binaural'), findsNothing);
     expect(find.text('Ear Licking'), findsOneWidget);
     expect(find.text(en.searchWorks(3)), findsOneWidget);
+  });
+
+  testWidgets('a failing history write still opens the results', (tester) async {
+    final http = mockHttp({listUrl(const ListQuery.search('ear')): listHtml([5])});
+    await openSearch(tester, [...await testOverrides(client: http), searchHistoryRepoProvider.overrideWithValue(FakeHistory(failPush: true))]);
+    await tester.enterText(find.byType(SearchBar), 'ear');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    expect(find.text('Post 5'), findsOneWidget);
   });
 }
