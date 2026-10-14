@@ -36,11 +36,14 @@ class ApiException implements Exception {
 const _pageHeaders = {'User-Agent': 'Mozilla/5.0 (Linux; Android 14; Mobile) nihonkoe'};
 
 class ApiClient {
-  ApiClient(this._http);
+  ApiClient(this._http, {this.timeout = const Duration(seconds: 20)});
   final http.Client _http;
 
+  /// dart:io's HttpClient never gives up on a silent server; surface it as an error so retry and the error UI run.
+  final Duration timeout;
+
   Future<String?> _getHtml(String url) async {
-    final res = await _http.get(Uri.parse(url), headers: _pageHeaders);
+    final res = await _http.get(Uri.parse(url), headers: _pageHeaders).timeout(timeout);
     if (res.statusCode == 404) return null;
     if (res.statusCode < 200 || res.statusCode >= 300) throw ApiException(url, res.statusCode);
     return utf8.decode(res.bodyBytes, allowMalformed: true);

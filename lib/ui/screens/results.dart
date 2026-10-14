@@ -45,6 +45,9 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                 },
               ),
               IconButton(
+                tooltip: l.layoutSwitch(
+                  {CardLayout.grid: l.layoutGrid, CardLayout.compact: l.layoutCompact, CardLayout.list: l.layoutList}[layout.next]!,
+                ),
                 icon: Icon(_layoutIcons[layout]),
                 onPressed: ref.read(settingsProvider.notifier).cycleCardLayout,
               ),

@@ -67,10 +67,17 @@ class _PostBody extends StatelessWidget {
         ),
         SliverList.list(
           children: [
-            GestureDetector(
-              onTap: post.images.isEmpty ? null : () => context.push(galleryPath(post.id, 0)),
-              child: Cover(url: post.cover, aspectRatio: 4 / 3),
-            ),
+            if (post.images.isEmpty)
+              Cover(url: post.cover, aspectRatio: 4 / 3)
+            else
+              Semantics(
+                label: l.detailOpenImage(1),
+                button: true,
+                child: InkWell(
+                  onTap: () => context.push(galleryPath(post.id, 0)),
+                  child: Cover(url: post.cover, aspectRatio: 4 / 3),
+                ),
+              ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: SelectableText(post.title, style: theme.textTheme.titleLarge),

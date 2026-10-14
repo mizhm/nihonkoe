@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -40,5 +41,10 @@ void main() {
           utf8.encode('<a href="https://japaneseasmr.com/tag/asmr/" title="(7)"><span class="tag-groups-label">ASMR</span></a>'), 200);
     }));
     expect(await client.listTagIndex(TagIndex.tags), const [TagIndexEntry(slug: 'asmr', name: 'ASMR', count: 7)]);
+  });
+
+  test('a request that never answers times out instead of spinning forever', () async {
+    final client = ApiClient(MockClient((_) => Completer<http.Response>().future), timeout: const Duration(milliseconds: 50));
+    await expectLater(client.getPost(1), throwsA(isA<TimeoutException>()));
   });
 }

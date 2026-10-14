@@ -50,7 +50,7 @@ class _FeaturedItem extends ConsumerWidget {
     // The widget only has id + cover; the title arrives with the (cached) post detail.
     final detail = ref.watch(postProvider(post.id)).value;
     final postRef = detail != null ? PostRef.fromDetail(detail) : PostRef(id: post.id, title: '', cover: post.cover);
-    return InkWell(
+    final item = InkWell(
       onTap: () => context.push(postPath(base, post.id)),
       onLongPress: () => showPostActions(context, postRef),
       child: Stack(
@@ -82,5 +82,7 @@ class _FeaturedItem extends ConsumerWidget {
         ],
       ),
     );
+    // The widget only has a cover until the detail arrives; never leave the item unnamed.
+    return Semantics(label: detail?.title ?? context.l10n.homeFeatured, button: true, child: item);
   }
 }

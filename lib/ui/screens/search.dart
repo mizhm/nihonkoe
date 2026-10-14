@@ -56,6 +56,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               trailing: [
                 if (_text.isNotEmpty)
                   IconButton(
+                    tooltip: MaterialLocalizations.of(context).clearButtonTooltip,
                     icon: const Icon(Symbols.close),
                     onPressed: () {
                       _controller.clear();
