@@ -54,8 +54,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/player',
         parentNavigatorKey: _rootKey,
-        pageBuilder: (_, _) => CustomTransitionPage(
-          child: const PlayerScreen(),
+        pageBuilder: (_, s) => CustomTransitionPage(
+          child: PlayerScreen(base: s.uri.queryParameters['from'] ?? ''),
           transitionsBuilder: (_, animation, _, child) => SlideTransition(
             position: Tween(begin: const Offset(0, 1), end: Offset.zero)
                 .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),

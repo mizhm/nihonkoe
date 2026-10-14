@@ -10,6 +10,7 @@ import '../../logic/seek.dart';
 import '../../player/handler.dart';
 import '../../state/player.dart';
 import '../l10n.dart';
+import '../links.dart';
 import 'cover.dart';
 
 class MiniPlayer extends ConsumerWidget {
@@ -25,16 +26,7 @@ class MiniPlayer extends ConsumerWidget {
     final handler = ref.read(audioHandlerProvider);
     final playback = ref.watch(playbackProvider).value ?? const PlaybackInfo();
     final duration = playback.duration ?? Duration.zero;
-    final position = ref.watch(positionProvider).value ?? Duration.zero;
-    final seconds = position.inMilliseconds / 1000;
-    final chapter = chapterIndexAt(item.chapters, seconds);
     final error = snapshot.error != null;
-    final subtitle = error
-        ? l.playerErrorShort
-        : chapter >= 0
-            ? '${item.chapters[chapter].title} · ${formatTime(seconds)}'
-            : item.post.cv ?? '';
-    final progress = duration > Duration.zero ? (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0) : 0.0;
 
     return Material(
       color: theme.colorScheme.surfaceContainer,
@@ -48,25 +40,39 @@ class MiniPlayer extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              LayoutBuilder(
-                builder: (context, constraints) => GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onTapUp: duration > Duration.zero
-                      ? (d) => handler.seek(Duration(
-                          seconds: seekTarget(d.localPosition.dx, constraints.maxWidth, duration.inSeconds.toDouble()).round()))
-                      : null,
-                  child: Semantics(
-                    label: l.playerPosition,
-                    value: formatTime(seconds),
-                    child: SizedBox(
-                      height: 12,
-                      child: Align(alignment: Alignment.topCenter, child: LinearProgressIndicator(value: progress, minHeight: 3)),
+              // Only the bar and the subtitle follow the position; the rest rebuilds on state changes.
+              Consumer(
+                builder: (context, ref, _) {
+                  final position = ref.watch(positionProvider).value ?? Duration.zero;
+                  final seconds = position.inMilliseconds / 1000;
+                  final progress =
+                      duration > Duration.zero ? (position.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0) : 0.0;
+                  return LayoutBuilder(
+                    builder: (context, constraints) => GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTapUp: duration > Duration.zero
+                          ? (d) => handler.seek(Duration(
+                              seconds: seekTarget(d.localPosition.dx, constraints.maxWidth, duration.inSeconds.toDouble()).round()))
+                          : null,
+                      child: Semantics(
+                        label: l.playerPosition,
+                        value: formatTime(seconds),
+                        increasedValue: formatTime(seconds + 30),
+                        decreasedValue: formatTime(seconds - 15),
+                        onIncrease: () => handler.seekBy(30),
+                        onDecrease: () => handler.seekBy(-15),
+                        child: SizedBox(
+                          height: 12,
+                          child: Align(alignment: Alignment.topCenter, child: LinearProgressIndicator(value: progress, minHeight: 3)),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
               InkWell(
-                onTap: () => context.push('/player'),
+                // The player sits above the tabs; tell it which tab to open pages in.
+                onTap: () => context.push(Uri(path: '/player', queryParameters: {'from': branchBaseOf(currentPath(context))}).toString()),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 4, 8),
                   child: Row(
@@ -82,13 +88,23 @@ class MiniPlayer extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleSmall),
-                              Text(
-                                subtitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: error ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant,
-                                ),
+                              Consumer(
+                                builder: (context, ref, _) {
+                                  final seconds = (ref.watch(positionProvider).value ?? Duration.zero).inMilliseconds / 1000;
+                                  final chapter = chapterIndexAt(item.chapters, seconds);
+                                  return Text(
+                                    error
+                                        ? l.playerErrorShort
+                                        : chapter >= 0
+                                            ? '${item.chapters[chapter].title} · ${formatTime(seconds)}'
+                                            : item.post.cv ?? '',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: error ? theme.colorScheme.error : theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  );
+                                },
                               ),
                             ],
                           ),

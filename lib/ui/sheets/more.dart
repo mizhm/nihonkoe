@@ -8,7 +8,7 @@ import '../l10n.dart';
 import '../links.dart';
 import 'queue.dart';
 
-Future<void> showMoreSheet(BuildContext context) => showModalBottomSheet<void>(
+Future<void> showMoreSheet(BuildContext context, {String base = ''}) => showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
       builder: (_) => Consumer(
@@ -48,7 +48,7 @@ Future<void> showMoreSheet(BuildContext context) => showModalBottomSheet<void>(
                       final router = GoRouter.of(context);
                       Navigator.pop(sheetContext);
                       Navigator.pop(context); // close the player
-                      router.push(postPath('', item.post.id));
+                      router.push(postPath(base, item.post.id));
                     },
                   ),
               ],

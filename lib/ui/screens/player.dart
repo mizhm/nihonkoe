@@ -19,15 +19,16 @@ import '../widgets/cover.dart';
 import '../widgets/message.dart';
 
 class PlayerScreen extends ConsumerStatefulWidget {
-  const PlayerScreen({super.key});
+  const PlayerScreen({super.key, this.base = ''});
+
+  /// The tab root the player was opened from ('' for home), where "Open work" pushes the post page.
+  final String base;
 
   @override
   ConsumerState<PlayerScreen> createState() => _PlayerScreenState();
 }
 
 class _PlayerScreenState extends ConsumerState<PlayerScreen> {
-  double? _scrub;
-
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
@@ -40,8 +41,6 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
     }
     final playback = ref.watch(playbackProvider).value ?? const PlaybackInfo();
     final duration = (playback.duration ?? Duration.zero).inMilliseconds / 1000;
-    final position = _scrub ?? (ref.watch(positionProvider).value ?? Duration.zero).inMilliseconds / 1000;
-    final chapter = chapterIndexAt(item.chapters, position);
     ref.watch(nowProvider); // rebuild every 15 s so the remaining minutes count down
     final remaining = sleepRemaining(snapshot.sleep, handler.now());
     final timer = remaining == null ? null : sleepText(remaining, l);
@@ -72,11 +71,19 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.textTheme.titleLarge),
-                  Text(
-                    chapter >= 0 ? item.chapters[chapter].title : item.post.cv ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  Consumer(
+                    builder: (context, ref, _) {
+                      final chapter = chapterIndexAt(
+                        item.chapters,
+                        (ref.watch(positionProvider).value ?? Duration.zero).inMilliseconds / 1000,
+                      );
+                      return Text(
+                        chapter >= 0 ? item.chapters[chapter].title : item.post.cv ?? '',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -88,34 +95,11 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                   ),
                 )
               else
-                Column(
-                  children: [
-                    Slider(
-                      value: position.clamp(0, duration > 0 ? duration : 1),
-                      max: duration > 0 ? duration : 1,
-                      semanticFormatterCallback: (v) => '${l.playerPosition} ${formatTime(v)}',
-                      onChanged: duration > 0 ? (v) => setState(() => _scrub = v) : null,
-                      onChangeEnd: (v) {
-                        handler.seek(Duration(milliseconds: (v * 1000).round()));
-                        setState(() => _scrub = null);
-                      },
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(formatTime(position), style: theme.textTheme.labelSmall),
-                          Text(duration > 0 ? '-${formatTime(duration - position)}' : '--:--', style: theme.textTheme.labelSmall),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+                _PositionSlider(duration: duration),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  IconButton(tooltip: l.playerBack15, iconSize: 28, icon: const Icon(Symbols.replay_10), onPressed: () => handler.seekBy(-15)),
+                  IconButton(tooltip: l.playerBack15, iconSize: 28, icon: const Icon(Symbols.replay), onPressed: () => handler.seekBy(-15)),
                   IconButton(tooltip: l.playerPreviousChapter, iconSize: 32, icon: const Icon(Symbols.skip_previous, fill: 1), onPressed: handler.previousChapter),
                   FloatingActionButton.large(
                     tooltip: playback.playing ? l.playerPause : l.playerPlay,
@@ -153,7 +137,7 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
                   Badge(
                     isLabelVisible: snapshot.shuffle,
                     smallSize: 6,
-                    child: IconButton(tooltip: l.playerMore, icon: const Icon(Symbols.more_horiz), onPressed: () => showMoreSheet(context)),
+                    child: IconButton(tooltip: l.playerMore, icon: const Icon(Symbols.more_horiz), onPressed: () => showMoreSheet(context, base: widget.base)),
                   ),
                 ],
               ),
@@ -161,6 +145,51 @@ class _PlayerScreenState extends ConsumerState<PlayerScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The only part of the player that follows the position (~5 updates a second), so the rest stays put.
+class _PositionSlider extends ConsumerStatefulWidget {
+  const _PositionSlider({required this.duration});
+  final double duration;
+
+  @override
+  ConsumerState<_PositionSlider> createState() => _PositionSliderState();
+}
+
+class _PositionSliderState extends ConsumerState<_PositionSlider> {
+  double? _scrub;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = context.l10n;
+    final theme = Theme.of(context);
+    final duration = widget.duration;
+    final position = _scrub ?? (ref.watch(positionProvider).value ?? Duration.zero).inMilliseconds / 1000;
+    return Column(
+      children: [
+        Slider(
+          value: position.clamp(0, duration > 0 ? duration : 1),
+          max: duration > 0 ? duration : 1,
+          semanticFormatterCallback: (v) => '${l.playerPosition} ${formatTime(v)}',
+          onChanged: duration > 0 ? (v) => setState(() => _scrub = v) : null,
+          onChangeEnd: (v) {
+            ref.read(audioHandlerProvider).seek(Duration(milliseconds: (v * 1000).round()));
+            setState(() => _scrub = null);
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(formatTime(position), style: theme.textTheme.labelSmall),
+              Text(duration > 0 ? '-${formatTime(duration - position)}' : '--:--', style: theme.textTheme.labelSmall),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

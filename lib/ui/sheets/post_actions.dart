@@ -8,6 +8,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../api/models.dart';
 import '../../logic/queue.dart';
+import '../../player/handler.dart';
 import '../../state/player.dart';
 import '../../state/posts.dart';
 import '../l10n.dart';
@@ -41,21 +42,25 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
   bool _tagsFailed = false;
   String? _loadingAction;
 
-  /// Loads the work's streams, then runs [action]; a work without audio says so.
-  Future<void> _withItems(String label, Future<void> Function(List<QueueItem> items) action, {String? done}) async {
+  /// Loads the work's streams and where it was left, then runs [action]; a work without audio says so.
+  Future<void> _withItems(String label, _PlayAction action, {String? done}) async {
     final messenger = ScaffoldMessenger.of(context);
     final l = context.l10n;
+    // Read now: the sheet closes before the action runs, and its ref goes with it.
+    final handler = ref.read(audioHandlerProvider);
+    final positions = ref.read(positionsRepoProvider);
     setState(() => _loadingAction = label);
     try {
       final detail = await ref.read(postProvider(widget.post.id).future);
       final items = detail == null ? const <QueueItem>[] : queueItemsFor(detail);
+      final resume = await positions.inProgress(widget.post.id);
       if (!mounted) return;
       Navigator.pop(context);
       if (items.isEmpty) {
         messenger.showSnackBar(SnackBar(content: Text(l.detailNoStream)));
         return;
       }
-      await action(items);
+      await action(handler, items, resume?.stream ?? 0);
       if (done != null) messenger.showSnackBar(SnackBar(content: Text(done)));
     } catch (_) {
       if (mounted) setState(() => _loadingAction = null);
@@ -63,14 +68,14 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
     }
   }
 
-  Widget _playTile(IconData icon, String label, Future<void> Function(List<QueueItem>) action, {String? done}) => ListTile(
-        leading: Icon(icon),
-        title: Text(label),
-        trailing: _loadingAction == label
-            ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-            : null,
-        onTap: _loadingAction != null ? null : () => _withItems(label, action, done: done),
-      );
+  Widget _playTile(IconData icon, String label, _PlayAction action, {String? done}) => ListTile(
+    leading: Icon(icon),
+    title: Text(label),
+    trailing: _loadingAction == label
+        ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+        : null,
+    onTap: _loadingAction != null ? null : () => _withItems(label, action, done: done),
+  );
 
   void _go(String path) {
     final router = GoRouter.of(context);
@@ -104,16 +109,22 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: SizedBox.square(dimension: 48, child: Cover(url: post.cover, borderRadius: BorderRadius.circular(8))),
+              leading: SizedBox.square(
+                dimension: 48,
+                child: Cover(url: post.cover, borderRadius: BorderRadius.circular(8)),
+              ),
               title: Text(post.title, maxLines: 2, overflow: TextOverflow.ellipsis),
               subtitle: post.cv == null ? null : Text(post.cv!),
             ),
             const Divider(),
-            _playTile(Symbols.play_arrow, l.actionsPlayNow, (items) => ref.read(audioHandlerProvider).playItems(items)),
-            _playTile(Symbols.playlist_play, l.actionsPlayNext, (items) => ref.read(audioHandlerProvider).playNextItems(items),
-                done: l.queueNext),
-            _playTile(Symbols.queue_music, l.detailAddToQueue, (items) => ref.read(audioHandlerProvider).enqueue(items),
-                done: l.queueAdded),
+            _playTile(Symbols.play_arrow, l.actionsPlayNow, (h, items, start) => h.playItems(items, start: start)),
+            _playTile(
+              Symbols.playlist_play,
+              l.actionsPlayNext,
+              (h, items, _) => h.playNextItems(items),
+              done: l.queueNext,
+            ),
+            _playTile(Symbols.queue_music, l.detailAddToQueue, (h, items, _) => h.enqueue(items), done: l.queueAdded),
             // Favorites arrive with the library (phase 3).
             ListTile(leading: const Icon(Symbols.favorite), title: Text(l.detailFavorite), enabled: false),
             const Divider(),
@@ -135,7 +146,9 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
               leading: const Icon(Symbols.sell),
               title: Text(l.actionsViewTags),
               subtitle: _tagsFailed ? Text(l.listErrorTitle) : null,
-              trailing: _loadingTags ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)) : null,
+              trailing: _loadingTags
+                  ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  : null,
               onTap: _loadingTags ? null : _loadTags,
             ),
             if (_tags case final tags? when tags.isNotEmpty)
@@ -172,3 +185,6 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
     );
   }
 }
+
+/// [start] is the stream to begin with: the part the listener left, or 0.
+typedef _PlayAction = Future<void> Function(NihonkoeAudioHandler handler, List<QueueItem> items, int start);
