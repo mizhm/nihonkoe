@@ -7,4 +7,25 @@ void main() {
     final manifest = File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
     expect(manifest, contains('<uses-permission android:name="android.permission.INTERNET"'));
   });
+
+  test('manifest declares the audio_service service, media button receiver and playback permissions', () {
+    final manifest = File('android/app/src/main/AndroidManifest.xml').readAsStringSync();
+    for (final needle in [
+      'android.permission.WAKE_LOCK',
+      'android.permission.FOREGROUND_SERVICE"',
+      'android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK',
+      'android.permission.POST_NOTIFICATIONS',
+      'com.ryanheise.audioservice.AudioService"',
+      'android:foregroundServiceType="mediaPlayback"',
+      'com.ryanheise.audioservice.MediaButtonReceiver',
+      'android.intent.action.MEDIA_BUTTON',
+    ]) {
+      expect(manifest, contains(needle), reason: needle);
+    }
+  });
+
+  test('MainActivity shares the audio_service engine and is a FragmentActivity (local_auth in phase 3)', () {
+    final activity = File('android/app/src/main/kotlin/dev/local/nihonkoe/MainActivity.kt').readAsStringSync();
+    expect(activity, contains('AudioServiceFragmentActivity'));
+  });
 }

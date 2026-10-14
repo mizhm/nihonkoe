@@ -1,5 +1,6 @@
 package dev.local.nihonkoe
 
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceFragmentActivity
 
-class MainActivity : FlutterActivity()
+// Shares audio_service's engine with the playback service; a FragmentActivity because local_auth (app lock) needs one.
+class MainActivity : AudioServiceFragmentActivity()

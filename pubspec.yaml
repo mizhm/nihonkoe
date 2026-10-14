@@ -7,6 +7,8 @@ environment:
   sdk: ^3.13.5
 
 dependencies:
+  audio_service: ^0.18.19
+  audio_session: ^0.2.4
   cached_network_image: ^4.0.4
   dynamic_color: ^2.1.0
   flutter:
@@ -18,10 +20,12 @@ dependencies:
   html: ^0.15.7
   http: ^1.6.0
   intl: any
+  just_audio: ^0.10.6
   material_symbols_icons: ^4.2960.0
   material_ui: ^1.6.0
   path: ^1.9.1
   path_provider: ^2.1.6
+  rxdart: ^0.28.0
   share_plus: ^13.3.1
   shared_preferences: ^2.5.6
   sqflite: ^2.4.4+2
