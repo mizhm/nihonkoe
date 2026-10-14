@@ -13,6 +13,7 @@ import 'ui/screens/post.dart';
 import 'ui/screens/results.dart';
 import 'ui/screens/search.dart';
 import 'ui/screens/settings.dart';
+import 'ui/widgets/mini_player.dart';
 
 final _rootKey = GlobalKey<NavigatorState>();
 
@@ -83,15 +84,21 @@ class AppShell extends StatelessWidget {
       body: shell,
       bottomNavigationBar: keyboardOpen
           ? null
-          : NavigationBar(
-              selectedIndex: shell.currentIndex,
-              // Tapping the open tab again returns to its first screen.
-              onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
-              destinations: [
-                destination(Symbols.explore, l.tabsHome),
-                destination(Symbols.search, l.tabsSearch),
-                destination(Symbols.library_music, l.tabsLibrary),
-                destination(Symbols.settings, l.tabsSettings),
+          : Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const MiniPlayer(),
+                NavigationBar(
+                  selectedIndex: shell.currentIndex,
+                  // Tapping the open tab again returns to its first screen.
+                  onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
+                  destinations: [
+                    destination(Symbols.explore, l.tabsHome),
+                    destination(Symbols.search, l.tabsSearch),
+                    destination(Symbols.library_music, l.tabsLibrary),
+                    destination(Symbols.settings, l.tabsSettings),
+                  ],
+                ),
               ],
             ),
     );
