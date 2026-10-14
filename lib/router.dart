@@ -9,6 +9,7 @@ import 'ui/links.dart';
 import 'ui/screens/gallery.dart';
 import 'ui/screens/home.dart';
 import 'ui/screens/library.dart';
+import 'ui/screens/player.dart';
 import 'ui/screens/post.dart';
 import 'ui/screens/results.dart';
 import 'ui/screens/search.dart';
@@ -49,6 +50,18 @@ final routerProvider = Provider<GoRouter>((ref) {
           _branch('/library', const LibraryScreen()),
           _branch('/settings', const SettingsScreen()),
         ],
+      ),
+      GoRoute(
+        path: '/player',
+        parentNavigatorKey: _rootKey,
+        pageBuilder: (_, _) => CustomTransitionPage(
+          child: const PlayerScreen(),
+          transitionsBuilder: (_, animation, _, child) => SlideTransition(
+            position: Tween(begin: const Offset(0, 1), end: Offset.zero)
+                .animate(CurvedAnimation(parent: animation, curve: Curves.easeOutCubic)),
+            child: child,
+          ),
+        ),
       ),
       GoRoute(
         path: '/gallery/:id',
