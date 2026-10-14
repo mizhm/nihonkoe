@@ -13,6 +13,8 @@ void main() {
     expect(find.byType(ImageFiltered), findsNothing);
     await pumpRouted(tester, covers(), overrides: await testOverrides(prefs: {'language': 'en', 'privacy': true}));
     await tester.pumpAndSettle();
-    expect(find.byType(ImageFiltered), findsOneWidget);
+    // A 16-px decode scaled up blurs for free; a per-cover blur layer would jank long grids.
+    expect(find.byType(ImageFiltered), findsNothing);
+    expect(tester.widget<Image>(find.byType(Image)).image, isA<ResizeImage>());
   });
 }

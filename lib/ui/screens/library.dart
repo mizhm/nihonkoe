@@ -11,6 +11,7 @@ import '../../state/library.dart';
 import '../../state/player.dart';
 import '../../state/settings.dart';
 import '../l10n.dart';
+import '../feedback.dart';
 import '../links.dart';
 import '../sheets/post_actions.dart';
 import '../widgets/cover.dart';
@@ -41,64 +42,94 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
         ],
       ),
     );
-    if (ok == true) await ref.read(libraryProvider.notifier).clearHistory();
+    if (ok == true && mounted) await reportErrors(context, ref.read(libraryProvider.notifier).clearHistory());
   }
 
   @override
   Widget build(BuildContext context) {
     final l = context.l10n;
-    final data = ref.watch(libraryProvider).value ?? const LibraryData();
+    final library = ref.watch(libraryProvider);
+    final data = library.value ?? const LibraryData();
     final layout = ref.watch(settingsProvider.select((s) => s.cardLayout));
-    final body = switch (_tab) {
-      _Tab.favorites => data.favorites.isEmpty
-          ? SliverFillRemaining(
-              hasScrollBody: false,
-              child: Message(icon: Symbols.favorite, title: l.libraryEmptyFavorites, hint: l.libraryEmptyFavoritesHint),
-            )
-          : SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              sliver: SliverGrid.builder(
-                gridDelegate: layout == CardLayout.list
-                    ? const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 1, mainAxisExtent: 112)
-                    : SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: layout.columns,
-                        childAspectRatio: layout == CardLayout.grid ? 0.82 : 0.95,
-                      ),
-                itemCount: data.favorites.length,
-                itemBuilder: (_, i) => PostCard(post: refToSummary(data.favorites[i]), layout: layout, tags: const []),
-              ),
+    final body = library.hasError && !library.hasValue
+        // A read failure must not pass for an empty library.
+        ? SliverFillRemaining(
+            hasScrollBody: false,
+            child: Message(
+              icon: Symbols.cloud_off,
+              title: l.listErrorTitle,
+              hint: l.listErrorHint,
+              onRetry: () => ref.invalidate(libraryProvider),
             ),
-      _Tab.history => data.history.isEmpty
-          ? SliverFillRemaining(hasScrollBody: false, child: Message(icon: Symbols.history, title: l.libraryEmptyHistory))
-          : SliverList.list(children: [
-              for (final section in groupHistory(data.history, DateTime.now())) ...[
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-                  child: Text(switch (section.group) {
-                    HistoryGroup.today => l.libraryGroupToday,
-                    HistoryGroup.yesterday => l.libraryGroupYesterday,
-                    HistoryGroup.week => l.libraryGroupWeek,
-                    HistoryGroup.older => l.libraryGroupOlder,
-                  }, style: Theme.of(context).textTheme.labelLarge),
-                ),
-                for (final e in section.items)
-                  _LibraryRow(post: e.post, meta: _playedAt(context, e, section.group), inHistory: true),
-              ],
-            ]),
-      _Tab.rated => data.ratings.isEmpty
-          ? SliverFillRemaining(
-              hasScrollBody: false,
-              child: Message(icon: Symbols.star, title: l.libraryEmptyRated, hint: l.libraryEmptyRatedHint),
-            )
-          : SliverList.list(children: [for (final r in data.ratings) _LibraryRow(post: r.post, meta: '${r.rating}★')]),
-    };
+          )
+        : switch (_tab) {
+            _Tab.favorites =>
+              data.favorites.isEmpty
+                  ? SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Message(
+                        icon: Symbols.favorite,
+                        title: l.libraryEmptyFavorites,
+                        hint: l.libraryEmptyFavoritesHint,
+                      ),
+                    )
+                  : SliverPadding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      sliver: SliverGrid.builder(
+                        gridDelegate: layout == CardLayout.list
+                            ? const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 1, mainAxisExtent: 112)
+                            : SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: layout.columns,
+                                childAspectRatio: layout == CardLayout.grid ? 0.82 : 0.95,
+                              ),
+                        itemCount: data.favorites.length,
+                        itemBuilder: (_, i) =>
+                            PostCard(post: refToSummary(data.favorites[i]), layout: layout, tags: const []),
+                      ),
+                    ),
+            _Tab.history =>
+              data.history.isEmpty
+                  ? SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Message(icon: Symbols.history, title: l.libraryEmptyHistory),
+                    )
+                  : SliverList.list(
+                      children: [
+                        for (final section in groupHistory(data.history, ref.watch(todayProvider))) ...[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                            child: Text(switch (section.group) {
+                              HistoryGroup.today => l.libraryGroupToday,
+                              HistoryGroup.yesterday => l.libraryGroupYesterday,
+                              HistoryGroup.week => l.libraryGroupWeek,
+                              HistoryGroup.older => l.libraryGroupOlder,
+                            }, style: Theme.of(context).textTheme.labelLarge),
+                          ),
+                          for (final e in section.items)
+                            _LibraryRow(post: e.post, meta: _playedAt(context, e, section.group), inHistory: true),
+                        ],
+                      ],
+                    ),
+            _Tab.rated =>
+              data.ratings.isEmpty
+                  ? SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Message(icon: Symbols.star, title: l.libraryEmptyRated, hint: l.libraryEmptyRatedHint),
+                    )
+                  : SliverList.list(
+                      children: [
+                        for (final r in data.ratings) _LibraryRow(post: r.post, meta: l.libraryStars(r.rating)),
+                      ],
+                    ),
+          };
     return Scaffold(
       body: CustomScrollView(
         slivers: [
           SliverAppBar.medium(
             title: Text(l.tabsLibrary),
             actions: [
-              if (_tab == _Tab.history && data.history.isNotEmpty) TextButton(onPressed: _confirmClear, child: Text(l.libraryClear)),
+              if (_tab == _Tab.history && data.history.isNotEmpty)
+                TextButton(onPressed: _confirmClear, child: Text(l.libraryClear)),
             ],
           ),
           SliverToBoxAdapter(
@@ -126,7 +157,10 @@ class _LibraryScreenState extends ConsumerState<LibraryScreen> {
     final m = MaterialLocalizations.of(context);
     final date = DateTime.fromMillisecondsSinceEpoch(e.playedAt);
     return switch (group) {
-      HistoryGroup.today || HistoryGroup.yesterday => m.formatTimeOfDay(TimeOfDay.fromDateTime(date)),
+      HistoryGroup.today || HistoryGroup.yesterday => m.formatTimeOfDay(
+        TimeOfDay.fromDateTime(date),
+        alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+      ),
       HistoryGroup.week => m.formatShortMonthDay(date),
       HistoryGroup.older => m.formatShortDate(date),
     };
@@ -146,7 +180,10 @@ class _LibraryRow extends ConsumerWidget {
     final resume = ref.watch(inProgressProvider(post.id)).value;
     final line = [?post.cv, meta].join(' · ');
     return ListTile(
-      leading: SizedBox(width: 64, child: Cover(url: post.cover, aspectRatio: 4 / 3, borderRadius: BorderRadius.circular(10))),
+      leading: SizedBox(
+        width: 64,
+        child: Cover(url: post.cover, aspectRatio: 4 / 3, borderRadius: BorderRadius.circular(10)),
+      ),
       title: Text(post.title, maxLines: 2, overflow: TextOverflow.ellipsis),
       subtitle: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

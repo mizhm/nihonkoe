@@ -156,5 +156,7 @@
   "detailDownload": "ダウンロード",
   "queueAdded": "キューに追加しました",
   "queueNext": "次に再生します",
-  "actionsRemoveFromHistory": "履歴から削除"
+  "actionsRemoveFromHistory": "履歴から削除",
+  "libraryStars": "星{n}つ",
+  "galleryReveal": "タップして表示"
 }

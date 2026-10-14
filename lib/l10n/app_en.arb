@@ -241,5 +241,12 @@
   "detailDownload": "Download",
   "queueAdded": "Added to queue",
   "queueNext": "Plays next",
-  "actionsRemoveFromHistory": "Remove from history"
+  "actionsRemoveFromHistory": "Remove from history",
+  "libraryStars": "{n} stars",
+  "galleryReveal": "Tap to show",
+  "@libraryStars": {
+    "placeholders": {
+      "n": {}
+    }
+  }
 }

@@ -518,4 +518,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get actionsRemoveFromHistory => 'Remove from history';
+
+  @override
+  String libraryStars(Object n) {
+    return '$n stars';
+  }
+
+  @override
+  String get galleryReveal => 'Tap to show';
 }

@@ -518,4 +518,12 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get actionsRemoveFromHistory => 'Xoá khỏi lịch sử';
+
+  @override
+  String libraryStars(Object n) {
+    return '$n sao';
+  }
+
+  @override
+  String get galleryReveal => 'Chạm để hiện ảnh';
 }

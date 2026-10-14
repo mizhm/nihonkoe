@@ -34,6 +34,10 @@ class _LockGateState extends ConsumerState<LockGate> with WidgetsBindingObserver
     super.dispose();
   }
 
+  // Back must not pop the screens hidden under the cover.
+  @override
+  Future<bool> didPopRoute() async => _locked;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // The PIN/pattern fallback is a separate Android activity: the app "backgrounds" while any prompt is open.

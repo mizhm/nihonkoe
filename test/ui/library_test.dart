@@ -81,7 +81,7 @@ void main() {
     await tester.tap(find.text(en.libraryRated));
     await tester.pumpAndSettle();
     expect(tester.getTopLeft(find.text('Best')).dy, lessThan(tester.getTopLeft(find.text('Good')).dy));
-    expect(find.textContaining('5★'), findsOneWidget);
+    expect(find.textContaining(en.libraryStars(5)), findsOneWidget);
     await tester.tap(find.text(en.libraryHistory));
     await tester.pumpAndSettle();
     await tester.longPress(find.text('Played'));

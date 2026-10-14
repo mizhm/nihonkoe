@@ -13,6 +13,7 @@ import '../../state/library.dart';
 import '../../state/player.dart';
 import '../../state/posts.dart';
 import '../l10n.dart';
+import '../feedback.dart';
 import '../links.dart';
 import '../widgets/cover.dart';
 
@@ -135,8 +136,9 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
                   title: Text(favorite ? l.detailUnfavorite : l.detailFavorite),
                   onTap: () {
                     final library = ref.read(libraryProvider.notifier);
+                    final saving = reportErrors(context, library.toggleFavorite(post)); // binds the messenger first
                     Navigator.pop(context);
-                    library.toggleFavorite(post);
+                    saving.ignore();
                   },
                 );
               },
@@ -199,8 +201,9 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
                 title: Text(l.actionsRemoveFromHistory),
                 onTap: () {
                   final library = ref.read(libraryProvider.notifier);
+                  final removing = reportErrors(context, library.removeFromHistory(post.id));
                   Navigator.pop(context);
-                  library.removeFromHistory(post.id);
+                  removing.ignore();
                 },
               ),
           ],

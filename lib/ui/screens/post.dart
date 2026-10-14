@@ -11,6 +11,7 @@ import '../../state/library.dart';
 import '../../state/player.dart';
 import '../../state/posts.dart';
 import '../l10n.dart';
+import '../feedback.dart';
 import '../links.dart';
 import '../widgets/cover.dart';
 import '../widgets/message.dart';
@@ -71,7 +72,7 @@ class _PostBody extends ConsumerWidget {
               tooltip: library.isFavorite(post.id) ? l.detailUnfavorite : l.detailFavorite,
               isSelected: library.isFavorite(post.id),
               icon: Icon(Symbols.favorite, fill: library.isFavorite(post.id) ? 1 : 0),
-              onPressed: () => ref.read(libraryProvider.notifier).toggleFavorite(postRef),
+              onPressed: () => reportErrors(context, ref.read(libraryProvider.notifier).toggleFavorite(postRef)),
             ),
             IconButton(
               tooltip: l.actionsOpenWeb,
@@ -150,7 +151,7 @@ class _PostBody extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
               child: RatingStars(
                 value: library.ratingOf(post.id),
-                onChanged: (v) => ref.read(libraryProvider.notifier).setRating(postRef, v),
+                onChanged: (v) => reportErrors(context, ref.read(libraryProvider.notifier).setRating(postRef, v)),
               ),
             ),
             if (post.streams.isEmpty)

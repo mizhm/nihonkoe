@@ -1041,6 +1041,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Remove from history'**
   String get actionsRemoveFromHistory;
+
+  /// No description provided for @libraryStars.
+  ///
+  /// In en, this message translates to:
+  /// **'{n} stars'**
+  String libraryStars(Object n);
+
+  /// No description provided for @galleryReveal.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to show'**
+  String get galleryReveal;
 }
 
 class _AppLocalizationsDelegate

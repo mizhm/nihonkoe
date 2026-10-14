@@ -1,5 +1,3 @@
-import 'dart:ui' show ImageFilter;
-
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -21,18 +19,19 @@ class Cover extends ConsumerWidget {
       color: colors.surfaceContainerHighest,
       child: Center(child: Icon(Symbols.headphones, color: colors.onSurfaceVariant)),
     );
+    // Privacy mode: a 16-px decode scaled up blurs the cover without a per-cover blur layer (cheap in long grids).
+    final privacy = url != null && ref.watch(settingsProvider.select((s) => s.privacy));
     Widget image = url == null
         ? placeholder
         : Image(
-            image: ref.watch(imageProviderFactory)(url!),
+            image: privacy
+                ? ResizeImage(ref.watch(imageProviderFactory)(url!), width: 16, policy: ResizeImagePolicy.fit)
+                : ref.watch(imageProviderFactory)(url!),
             fit: fit,
+            filterQuality: privacy ? FilterQuality.medium : FilterQuality.low,
             frameBuilder: (_, child, frame, sync) => sync || frame != null ? child : placeholder,
             errorBuilder: (_, _, _) => placeholder,
           );
-    if (url != null && ref.watch(settingsProvider.select((s) => s.privacy))) {
-      // Privacy mode: covers are recognisable thumbnails of explicit art.
-      image = ImageFiltered(imageFilter: ImageFilter.blur(sigmaX: 24, sigmaY: 24), child: image);
-    }
     image = ClipRRect(borderRadius: borderRadius, child: SizedBox.expand(child: image));
     return aspectRatio == null ? image : AspectRatio(aspectRatio: aspectRatio!, child: image);
   }

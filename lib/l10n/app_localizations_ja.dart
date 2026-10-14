@@ -513,4 +513,12 @@ class AppLocalizationsJa extends AppLocalizations {
 
   @override
   String get actionsRemoveFromHistory => '履歴から削除';
+
+  @override
+  String libraryStars(Object n) {
+    return '星$nつ';
+  }
+
+  @override
+  String get galleryReveal => 'タップして表示';
 }
