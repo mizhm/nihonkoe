@@ -41,8 +41,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       body: RefreshIndicator(
         onRefresh: () async {
-          ref.invalidate(postListProvider);
-          await ref.read(postListProvider(feedKey).future);
+          // Only this screen's lists: other tabs may be deep into their own pages.
+          for (final key in {latestKey, hotWeek, hotMonth, requested, feedKey}) {
+            ref.invalidate(postListProvider(key));
+          }
+          try {
+            await ref.read(postListProvider(feedKey).future);
+          } catch (_) {
+            // The old posts stay on screen, so say the refresh itself failed.
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.listRefreshFailed)));
+            }
+          }
         },
         child: CustomScrollView(
           slivers: [

@@ -37,8 +37,12 @@ class PostListNotifier extends AsyncNotifier<PostListState> {
   PostListNotifier(this.key);
   final PostListKey key;
 
+  // The notifier outlives a refresh, so a page requested before it must not land after it.
+  int _generation = 0;
+
   @override
   Future<PostListState> build() async {
+    _generation++;
     ref.cacheFor(const Duration(minutes: 30));
     final first = await ref.watch(apiClientProvider).listPosts(key.query, sort: key.sort);
     return PostListState(posts: uniqueById(first.items), page: 1, hasNext: first.hasNext, featured: first.featured);
@@ -46,11 +50,12 @@ class PostListNotifier extends AsyncNotifier<PostListState> {
 
   Future<void> loadMore() async {
     final current = state.value;
-    if (current == null || !current.hasNext || current.loadingMore) return;
+    if (state.isLoading || current == null || !current.hasNext || current.loadingMore) return;
+    final generation = _generation;
     state = AsyncData(current._with(loadingMore: true));
     try {
       final next = await ref.read(apiClientProvider).listPosts(key.query, page: current.page + 1, sort: key.sort);
-      if (!ref.mounted) return;
+      if (!ref.mounted || generation != _generation) return;
       state = AsyncData(PostListState(
         // New uploads shift pagination, so a later page can repeat earlier posts.
         posts: uniqueById([...current.posts, ...next.items]),
@@ -59,7 +64,7 @@ class PostListNotifier extends AsyncNotifier<PostListState> {
         featured: current.featured,
       ));
     } catch (error) {
-      if (!ref.mounted) return;
+      if (!ref.mounted || generation != _generation) return;
       state = AsyncData(current._with(loadingMore: false, loadMoreError: error));
     }
   }

@@ -1,7 +1,11 @@
+import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:nihonkoe/api/client.dart';
 import 'package:nihonkoe/api/models.dart';
 import 'package:nihonkoe/state/core.dart';
@@ -81,5 +85,38 @@ void main() {
     final second = containerFor(routes, log: log, cache: dir);
     expect((await second.read(tagIndexProvider(TagIndex.cv).future)).single.name, 'A');
     expect(log.length, 1);
+  });
+
+  test('a slow next page that lands after a refresh does not overwrite the refreshed list', () async {
+    var firstPage = listHtml([1, 2], next: true);
+    final slowPage2 = Completer<String>();
+    final c = ProviderContainer.test(
+      overrides: [
+        httpClientProvider.overrideWithValue(MockClient((req) async {
+          final body = req.url.toString() == page2 ? await slowPage2.future : firstPage;
+          return http.Response.bytes(utf8.encode(body), 200);
+        })),
+      ],
+      retry: (_, _) => null,
+    );
+    c.listen(postListProvider(key), (_, _) {});
+    await c.read(postListProvider(key).future);
+    final pending = c.read(postListProvider(key).notifier).loadMore();
+    firstPage = listHtml([9]);
+    c.invalidate(postListProvider(key));
+    await c.read(postListProvider(key).future);
+    slowPage2.complete(listHtml([3]));
+    await pending;
+    expect(c.read(postListProvider(key)).value!.posts.map((p) => p.id), [9]);
+  });
+
+  test('loadMore while a refresh is loading does nothing', () async {
+    final log = <String>[];
+    final c = containerFor({page1: listHtml([1], next: true), page2: listHtml([2])}, log: log);
+    c.listen(postListProvider(key), (_, _) {});
+    await c.read(postListProvider(key).future);
+    c.invalidate(postListProvider(key));
+    await c.read(postListProvider(key).notifier).loadMore();
+    expect(log, isNot(contains(page2)));
   });
 }
