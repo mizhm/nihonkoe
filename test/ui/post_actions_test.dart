@@ -16,7 +16,7 @@ Widget opener(PostRef post) => Builder(
 );
 
 void main() {
-  testWidgets('shows every action; favorites stay disabled until phase 3', (tester) async {
+  testWidgets('shows every action enabled', (tester) async {
     await pumpRouted(
       tester,
       opener(const PostRef(id: 150207, title: 'T', circle: 'HONEY NOIR', cv: '木蜜甜花')),
@@ -24,10 +24,8 @@ void main() {
     );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
-    for (final label in [en.detailFavorite]) {
-      expect(tester.widget<ListTile>(find.widgetWithText(ListTile, label)).enabled, isFalse, reason: label);
-    }
     for (final label in [
+      en.detailFavorite,
       en.actionsPlayNow,
       en.actionsPlayNext,
       en.detailAddToQueue,

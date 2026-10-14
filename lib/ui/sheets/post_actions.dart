@@ -9,13 +9,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../api/models.dart';
 import '../../logic/queue.dart';
 import '../../player/handler.dart';
+import '../../state/library.dart';
 import '../../state/player.dart';
 import '../../state/posts.dart';
 import '../l10n.dart';
 import '../links.dart';
 import '../widgets/cover.dart';
 
-Future<void> showPostActions(BuildContext context, PostRef post) {
+Future<void> showPostActions(BuildContext context, PostRef post, {bool inHistory = false}) {
   HapticFeedback.mediumImpact();
   final base = branchBase(context); // read before the sheet: its route is outside the shell
   return showModalBottomSheet<void>(
@@ -23,14 +24,15 @@ Future<void> showPostActions(BuildContext context, PostRef post) {
     useRootNavigator: true,
     showDragHandle: true,
     isScrollControlled: true,
-    builder: (_) => PostActionsSheet(post: post, base: base),
+    builder: (_) => PostActionsSheet(post: post, base: base, inHistory: inHistory),
   );
 }
 
 class PostActionsSheet extends ConsumerStatefulWidget {
-  const PostActionsSheet({super.key, required this.post, required this.base});
+  const PostActionsSheet({super.key, required this.post, required this.base, this.inHistory = false});
   final PostRef post;
   final String base;
+  final bool inHistory; // opened from the History tab: offer "Remove from history"
 
   @override
   ConsumerState<PostActionsSheet> createState() => _PostActionsSheetState();
@@ -125,8 +127,20 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
               done: l.queueNext,
             ),
             _playTile(Symbols.queue_music, l.detailAddToQueue, (h, items, _) => h.enqueue(items), done: l.queueAdded),
-            // Favorites arrive with the library (phase 3).
-            ListTile(leading: const Icon(Symbols.favorite), title: Text(l.detailFavorite), enabled: false),
+            Consumer(
+              builder: (context, ref, _) {
+                final favorite = ref.watch(libraryProvider).value?.isFavorite(post.id) ?? false;
+                return ListTile(
+                  leading: Icon(Symbols.favorite, fill: favorite ? 1 : 0),
+                  title: Text(favorite ? l.detailUnfavorite : l.detailFavorite),
+                  onTap: () {
+                    final library = ref.read(libraryProvider.notifier);
+                    Navigator.pop(context);
+                    library.toggleFavorite(post);
+                  },
+                );
+              },
+            ),
             const Divider(),
             if (post.circle case final circle?)
               ListTile(
@@ -179,6 +193,16 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
                 launchUrl(Uri.parse(post.url), mode: LaunchMode.externalApplication);
               },
             ),
+            if (widget.inHistory)
+              ListTile(
+                leading: const Icon(Symbols.history_toggle_off),
+                title: Text(l.actionsRemoveFromHistory),
+                onTap: () {
+                  final library = ref.read(libraryProvider.notifier);
+                  Navigator.pop(context);
+                  library.removeFromHistory(post.id);
+                },
+              ),
           ],
         ),
       ),

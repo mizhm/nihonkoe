@@ -7,12 +7,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../api/models.dart';
 import '../../logic/format.dart';
 import '../../logic/queue.dart';
+import '../../state/library.dart';
 import '../../state/player.dart';
 import '../../state/posts.dart';
 import '../l10n.dart';
 import '../links.dart';
 import '../widgets/cover.dart';
 import '../widgets/message.dart';
+import '../widgets/rating_stars.dart';
 import '../widgets/skeleton.dart';
 
 class PostScreen extends ConsumerWidget {
@@ -54,6 +56,8 @@ class _PostBody extends ConsumerWidget {
     final items = queueItemsFor(post);
     final handler = ref.read(audioHandlerProvider);
     final resumeAt = ref.watch(inProgressProvider(post.id)).value;
+    final library = ref.watch(libraryProvider).value ?? const LibraryData();
+    final postRef = PostRef.fromDetail(post);
     Widget section(String title) => Padding(
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
           child: Text(title, style: theme.textTheme.titleMedium),
@@ -63,6 +67,12 @@ class _PostBody extends ConsumerWidget {
         SliverAppBar(
           pinned: true,
           actions: [
+            IconButton(
+              tooltip: library.isFavorite(post.id) ? l.detailUnfavorite : l.detailFavorite,
+              isSelected: library.isFavorite(post.id),
+              icon: Icon(Symbols.favorite, fill: library.isFavorite(post.id) ? 1 : 0),
+              onPressed: () => ref.read(libraryProvider.notifier).toggleFavorite(postRef),
+            ),
             IconButton(
               tooltip: l.actionsOpenWeb,
               icon: const Icon(Symbols.open_in_new),
@@ -134,6 +144,13 @@ class _PostBody extends ConsumerWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+              child: RatingStars(
+                value: library.ratingOf(post.id),
+                onChanged: (v) => ref.read(libraryProvider.notifier).setRating(postRef, v),
               ),
             ),
             if (post.streams.isEmpty)
