@@ -38,7 +38,9 @@ class PostSliverGrid extends ConsumerWidget {
               itemCount: value.posts.length,
               itemBuilder: (context, i) {
                 if (i >= value.posts.length - _prefetch && value.hasNext && !value.loadingMore && value.loadMoreError == null) {
-                  WidgetsBinding.instance.addPostFrameCallback((_) => ref.read(provider.notifier).loadMore());
+                  // Read now: the callback may run after this widget is gone, and the notifier guards itself.
+                  final notifier = ref.read(provider.notifier);
+                  WidgetsBinding.instance.addPostFrameCallback((_) => notifier.loadMore());
                 }
                 final post = value.posts[i];
                 return PostCard(post: post, layout: layout, tags: namer(post.tagSlugs, layout.tags));
