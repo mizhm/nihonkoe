@@ -14,11 +14,13 @@ Future<void> openPost(WidgetTester tester, Map<String, String> routes, {int id =
   tester.view.physicalSize = const Size(1080, 6000);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(ProviderScope(
-    overrides: await testOverrides(client: mockHttp(routes, status: status)),
-    retry: noRetry,
-    child: const NihonkoeApp(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: await testOverrides(client: mockHttp(routes, status: status)),
+      retry: noRetry,
+      child: const NihonkoeApp(),
+    ),
+  );
   await tester.pumpAndSettle();
   containerOf(tester).read(routerProvider).push(postPath('', id));
   await tester.pumpAndSettle();
@@ -27,14 +29,14 @@ Future<void> openPost(WidgetTester tester, Map<String, String> routes, {int id =
 void main() {
   final html = File('test/fixtures/post.html').readAsStringSync();
 
-  testWidgets('shows title, people, chapters, tags; playback disabled for now', (tester) async {
+  testWidgets('shows title, people, chapters, tags and a Play button', (tester) async {
     await openPost(tester, {'https://japaneseasmr.com/150207/': html});
     expect(find.text('HONEY NOIR'), findsOneWidget);
     expect(find.text('木蜜甜花'), findsNWidgets(2)); // CV chip + the same name in the tag list (CVs are tags)
     expect(find.text(en.detailChapters(15)), findsOneWidget);
     expect(find.text('02_下から耳を舐め上げる_右'), findsOneWidget);
     expect(find.widgetWithText(ActionChip, 'Ear Licking 【耳舐め】'), findsOneWidget);
-    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, en.detailPlay)).onPressed, isNull);
+    expect(tester.widget<FilledButton>(find.widgetWithText(FilledButton, en.detailPlay)).onPressed, isNotNull);
   });
 
   testWidgets('a missing post says not found', (tester) async {

@@ -6,6 +6,8 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../api/models.dart';
 import '../../logic/format.dart';
+import '../../logic/queue.dart';
+import '../../state/player.dart';
 import '../../state/posts.dart';
 import '../l10n.dart';
 import '../links.dart';
@@ -40,15 +42,18 @@ class PostScreen extends ConsumerWidget {
   }
 }
 
-class _PostBody extends StatelessWidget {
+class _PostBody extends ConsumerWidget {
   const _PostBody({required this.post});
   final PostDetail post;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l = context.l10n;
     final theme = Theme.of(context);
     final base = branchBase(context);
+    final items = queueItemsFor(post);
+    final handler = ref.read(audioHandlerProvider);
+    final resumeAt = ref.watch(inProgressProvider(post.id)).value;
     Widget section(String title) => Padding(
           padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
           child: Text(title, style: theme.textTheme.titleMedium),
@@ -108,11 +113,25 @@ class _PostBody extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
               child: Row(
                 children: [
-                  // Playback arrives with the player (phase 2).
-                  Expanded(child: FilledButton.icon(onPressed: null, icon: const Icon(Symbols.play_arrow), label: Text(l.detailPlay))),
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: items.isEmpty ? null : () => handler.playItems(items),
+                      icon: const Icon(Symbols.play_arrow),
+                      label: Text(resumeAt == null ? l.detailPlay : l.detailResume(formatTime(resumeAt))),
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: FilledButton.tonalIcon(onPressed: null, icon: const Icon(Symbols.queue_music), label: Text(l.detailAddToQueue)),
+                    child: FilledButton.tonalIcon(
+                      onPressed: items.isEmpty
+                          ? null
+                          : () {
+                              handler.enqueue(items);
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l.queueAdded)));
+                            },
+                      icon: const Icon(Symbols.queue_music),
+                      label: Text(l.detailAddToQueue),
+                    ),
                   ),
                 ],
               ),
@@ -136,9 +155,10 @@ class _PostBody extends StatelessWidget {
               for (final track in post.tracks)
                 ListTile(
                   dense: true,
-                  enabled: false, // seeking to a chapter needs the player (phase 2)
+                  enabled: items.isNotEmpty,
                   leading: Text(formatTime(track.startSeconds), style: theme.textTheme.labelMedium),
                   title: Text(track.title),
+                  onTap: () => handler.playItems(items, startAt: Duration(seconds: track.startSeconds)),
                 ),
             ],
             if (post.tags.isNotEmpty) ...[

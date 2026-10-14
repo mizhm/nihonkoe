@@ -7,6 +7,8 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../api/models.dart';
+import '../../logic/queue.dart';
+import '../../state/player.dart';
 import '../../state/posts.dart';
 import '../l10n.dart';
 import '../links.dart';
@@ -37,6 +39,38 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
   bool _loadingTags = false;
   List<Term>? _tags;
   bool _tagsFailed = false;
+  String? _loadingAction;
+
+  /// Loads the work's streams, then runs [action]; a work without audio says so.
+  Future<void> _withItems(String label, Future<void> Function(List<QueueItem> items) action, {String? done}) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final l = context.l10n;
+    setState(() => _loadingAction = label);
+    try {
+      final detail = await ref.read(postProvider(widget.post.id).future);
+      final items = detail == null ? const <QueueItem>[] : queueItemsFor(detail);
+      if (!mounted) return;
+      Navigator.pop(context);
+      if (items.isEmpty) {
+        messenger.showSnackBar(SnackBar(content: Text(l.detailNoStream)));
+        return;
+      }
+      await action(items);
+      if (done != null) messenger.showSnackBar(SnackBar(content: Text(done)));
+    } catch (_) {
+      if (mounted) setState(() => _loadingAction = null);
+      messenger.showSnackBar(SnackBar(content: Text(l.listErrorTitle)));
+    }
+  }
+
+  Widget _playTile(IconData icon, String label, Future<void> Function(List<QueueItem>) action, {String? done}) => ListTile(
+        leading: Icon(icon),
+        title: Text(label),
+        trailing: _loadingAction == label
+            ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+            : null,
+        onTap: _loadingAction != null ? null : () => _withItems(label, action, done: done),
+      );
 
   void _go(String path) {
     final router = GoRouter.of(context);
@@ -75,10 +109,12 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
               subtitle: post.cv == null ? null : Text(post.cv!),
             ),
             const Divider(),
-            // Playback arrives with the player (phase 2), favorites with the library (phase 3).
-            ListTile(leading: const Icon(Symbols.play_arrow), title: Text(l.actionsPlayNow), enabled: false),
-            ListTile(leading: const Icon(Symbols.playlist_play), title: Text(l.actionsPlayNext), enabled: false),
-            ListTile(leading: const Icon(Symbols.queue_music), title: Text(l.detailAddToQueue), enabled: false),
+            _playTile(Symbols.play_arrow, l.actionsPlayNow, (items) => ref.read(audioHandlerProvider).playItems(items)),
+            _playTile(Symbols.playlist_play, l.actionsPlayNext, (items) => ref.read(audioHandlerProvider).playNextItems(items),
+                done: l.queueNext),
+            _playTile(Symbols.queue_music, l.detailAddToQueue, (items) => ref.read(audioHandlerProvider).enqueue(items),
+                done: l.queueAdded),
+            // Favorites arrive with the library (phase 3).
             ListTile(leading: const Icon(Symbols.favorite), title: Text(l.detailFavorite), enabled: false),
             const Divider(),
             if (post.circle case final circle?)
