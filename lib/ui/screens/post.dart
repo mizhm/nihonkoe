@@ -117,7 +117,7 @@ class _PostBody extends ConsumerWidget {
                       label: Text(circle),
                       onPressed: () => context.push(resultsPath(base, ListQuery.search(circle), title: circle)),
                     ),
-                  if (post.cv case final cv?)
+                  for (final cv in post.cv?.split(RegExp(r'\s*[,、]\s*')) ?? const <String>[])
                     ActionChip(
                       avatar: const Icon(Symbols.record_voice_over),
                       label: Text(cv),

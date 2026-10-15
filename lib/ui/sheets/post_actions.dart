@@ -151,7 +151,7 @@ class _PostActionsSheetState extends ConsumerState<PostActionsSheet> {
                 subtitle: Text(circle),
                 onTap: () => _go(resultsPath(widget.base, ListQuery.search(circle), title: circle)),
               ),
-            if (post.cv case final cv?)
+            for (final cv in post.cv?.split(RegExp(r'\s*[,、]\s*')) ?? const <String>[])
               ListTile(
                 leading: const Icon(Symbols.record_voice_over),
                 title: Text(l.actionsViewCv),
