@@ -377,7 +377,8 @@ class AppLocalizationsVi extends AppLocalizations {
   String get settingsPrivacy => 'Chế độ riêng tư';
 
   @override
-  String get settingsPrivacyHint => 'Làm mờ ảnh bìa, kể cả trên màn hình khoá.';
+  String get settingsPrivacyHint =>
+      'Ẩn ảnh bìa trên màn hình khoá và trình phát media.';
 
   @override
   String get settingsLock => 'Khoá ứng dụng';
@@ -525,5 +526,12 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get galleryReveal => 'Chạm để hiện ảnh';
+  String get challengeTitle => 'Xác minh bạn là người';
+
+  @override
+  String get challengeHint =>
+      'Trang web yêu cầu captcha. Vượt qua trong WebView rồi sẽ tự tải lại.';
+
+  @override
+  String get challengeOpen => 'Mở WebView';
 }

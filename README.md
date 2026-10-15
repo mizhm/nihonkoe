@@ -1,3 +1,3 @@
 # nihonkoe
 
-A new Flutter project.
+Japanese ASMR player for japaneseasmr.com.

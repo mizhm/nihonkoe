@@ -2,11 +2,13 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../api/client.dart';
 import '../../api/models.dart';
 import '../../logic/layout.dart';
 import '../../state/settings.dart';
 import '../l10n.dart';
 import '../sheets/sort.dart';
+import 'challenge.dart';
 import '../widgets/post_grid.dart';
 
 const _layoutIcons = {CardLayout.grid: Symbols.grid_view, CardLayout.compact: Symbols.apps, CardLayout.list: Symbols.view_list};
@@ -43,6 +45,11 @@ class _ResultsScreenState extends ConsumerState<ResultsScreen> {
                   final sort = await showSortSheet(context, _sort);
                   if (sort != null) setState(() => _sort = sort);
                 },
+              ),
+              IconButton(
+                tooltip: l.challengeOpen,
+                icon: const Icon(Symbols.public),
+                onPressed: () => ChallengeScreen.open(context, listUrl(widget.query, sort: _sort), title: title, closeWhenPassed: false),
               ),
               IconButton(
                 tooltip: l.layoutSwitch(

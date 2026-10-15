@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite/sqflite.dart';
 
+import '../api/browser.dart';
 import '../api/client.dart';
 import '../api/models.dart';
 
@@ -22,7 +23,7 @@ final httpClientProvider = Provider<http.Client>((ref) {
   return client;
 });
 
-final apiClientProvider = Provider<ApiClient>((ref) => ApiClient(ref.watch(httpClientProvider)));
+final apiClientProvider = Provider<ApiClient>((ref) => ApiClient(ref.watch(httpClientProvider), solveChallenge: browserFetch));
 
 final cacheDirProvider = FutureProvider<Directory>((ref) => getApplicationCacheDirectory());
 

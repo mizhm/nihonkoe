@@ -111,7 +111,7 @@
   "settingsLanguage": "言語",
   "settingsPrivacySection": "プライバシー",
   "settingsPrivacy": "プライバシーモード",
-  "settingsPrivacyHint": "ロック画面を含め、カバー画像をぼかします。",
+  "settingsPrivacyHint": "ロック画面とメディアコントロールでカバー画像を隠します。",
   "settingsLock": "アプリロック",
   "settingsLockHint": "再度開くときに Face ID・指紋・パスコードを要求します。",
   "layoutSwitch": "表示切替: {name}",
@@ -158,5 +158,7 @@
   "queueNext": "次に再生します",
   "actionsRemoveFromHistory": "履歴から削除",
   "libraryStars": "星{n}つ",
-  "galleryReveal": "タップして表示"
+  "challengeTitle": "人間であることを確認",
+  "challengeHint": "サイトがキャプチャを求めています。開いて確認を済ませると再読み込みします。",
+  "challengeOpen": "WebViewで開く"
 }

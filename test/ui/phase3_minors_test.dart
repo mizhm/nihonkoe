@@ -102,14 +102,11 @@ void main() {
     expect(find.textContaining('5★'), findsNothing);
   });
 
-  testWidgets('privacy mode blurs gallery images until tapped', (tester) async {
+  testWidgets('privacy mode leaves gallery images sharp', (tester) async {
     await app(tester, await testOverrides(prefs: {'language': 'en', 'privacy': true}, client: mockHttp({'https://japaneseasmr.com/150207/': postHtml})));
     containerOf(tester).read(routerProvider).push(postPath('', 150207));
     await tester.pumpAndSettle();
     containerOf(tester).read(routerProvider).push(galleryPath(150207, 0));
-    await tester.pumpAndSettle();
-    expect(find.byType(ImageFiltered), findsOneWidget);
-    await tester.tap(find.text(en.galleryReveal));
     await tester.pumpAndSettle();
     expect(find.byType(ImageFiltered), findsNothing);
   });

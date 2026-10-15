@@ -191,7 +191,7 @@
   "settingsLanguage": "Language",
   "settingsPrivacySection": "Privacy",
   "settingsPrivacy": "Privacy mode",
-  "settingsPrivacyHint": "Blur covers, including on the lock screen.",
+  "settingsPrivacyHint": "Hide covers on the lock screen and media controls.",
   "settingsLock": "App lock",
   "settingsLockHint": "Require Face ID, fingerprint or passcode when reopening.",
   "layoutSwitch": "Switch layout: {name}",
@@ -243,10 +243,12 @@
   "queueNext": "Plays next",
   "actionsRemoveFromHistory": "Remove from history",
   "libraryStars": "{n} stars",
-  "galleryReveal": "Tap to show",
   "@libraryStars": {
     "placeholders": {
       "n": {}
     }
-  }
+  },
+  "challengeTitle": "Verify you're human",
+  "challengeHint": "The site wants a captcha. Pass the check in the WebView and it loads again.",
+  "challengeOpen": "Open WebView"
 }

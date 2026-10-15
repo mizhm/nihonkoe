@@ -2,12 +2,14 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../api/client.dart';
 import '../../api/models.dart';
 import '../../l10n/app_localizations.dart';
 import '../../logic/layout.dart';
 import '../../state/posts.dart';
 import '../../state/settings.dart';
 import '../l10n.dart';
+import 'challenge.dart';
 import '../sheets/sort.dart';
 import '../widgets/featured_carousel.dart';
 import '../widgets/post_grid.dart';
@@ -120,6 +122,11 @@ class HomeScreen extends ConsumerWidget {
                           final sort = await showSortSheet(context, settings.homeSort);
                           if (sort != null) notifier.setHomeSort(sort);
                         },
+                      ),
+                      IconButton(
+                        tooltip: l.challengeOpen,
+                        icon: const Icon(Symbols.public),
+                        onPressed: () => ChallengeScreen.open(context, listUrl(feedKey.query, sort: feedKey.sort), title: null, closeWhenPassed: false),
                       ),
                       IconButton(
                         tooltip: l.layoutSwitch(layoutNames[settings.cardLayout.next]!),

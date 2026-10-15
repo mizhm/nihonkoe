@@ -17,6 +17,7 @@ import '../widgets/cover.dart';
 import '../widgets/message.dart';
 import '../widgets/rating_stars.dart';
 import '../widgets/skeleton.dart';
+import 'challenge.dart';
 
 class PostScreen extends ConsumerWidget {
   const PostScreen({super.key, required this.id});
@@ -28,9 +29,10 @@ class PostScreen extends ConsumerWidget {
     return Scaffold(
       body: ref.watch(postProvider(id)).when(
             loading: () => const _DetailSkeleton(),
-            error: (_, _) => Scaffold(
+            error: (error, _) => Scaffold(
               appBar: AppBar(),
               body: Message(
+                error: error,
                 icon: Symbols.cloud_off,
                 title: l.detailLoadFailed,
                 hint: l.listErrorHint,
@@ -73,6 +75,11 @@ class _PostBody extends ConsumerWidget {
               isSelected: library.isFavorite(post.id),
               icon: Icon(Symbols.favorite, fill: library.isFavorite(post.id) ? 1 : 0),
               onPressed: () => reportErrors(context, ref.read(libraryProvider.notifier).toggleFavorite(postRef)),
+            ),
+            IconButton(
+              tooltip: l.challengeOpen,
+              icon: const Icon(Symbols.public),
+              onPressed: () => ChallengeScreen.open(context, post.url, title: post.title, closeWhenPassed: false),
             ),
             IconButton(
               tooltip: l.actionsOpenWeb,

@@ -55,7 +55,7 @@ class Settings {
   final CardLayout cardLayout;
   final ListSort homeSort;
   final HomeFeed homeFeed;
-  final bool privacy; // blur covers, no lock-screen artwork
+  final bool privacy; // no artwork on the lock screen / media controls; in-app covers stay sharp
   final bool appLock;
 
   Settings copyWith({

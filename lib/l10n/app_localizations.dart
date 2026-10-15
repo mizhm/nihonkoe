@@ -769,7 +769,7 @@ abstract class AppLocalizations {
   /// No description provided for @settingsPrivacyHint.
   ///
   /// In en, this message translates to:
-  /// **'Blur covers, including on the lock screen.'**
+  /// **'Hide covers on the lock screen and media controls.'**
   String get settingsPrivacyHint;
 
   /// No description provided for @settingsLock.
@@ -1048,11 +1048,23 @@ abstract class AppLocalizations {
   /// **'{n} stars'**
   String libraryStars(Object n);
 
-  /// No description provided for @galleryReveal.
+  /// No description provided for @challengeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Tap to show'**
-  String get galleryReveal;
+  /// **'Verify you\'re human'**
+  String get challengeTitle;
+
+  /// No description provided for @challengeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The site wants a captcha. Pass the check in the WebView and it loads again.'**
+  String get challengeHint;
+
+  /// No description provided for @challengeOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Open WebView'**
+  String get challengeOpen;
 }
 
 class _AppLocalizationsDelegate

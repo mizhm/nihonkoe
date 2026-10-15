@@ -375,7 +375,7 @@ class AppLocalizationsJa extends AppLocalizations {
   String get settingsPrivacy => 'プライバシーモード';
 
   @override
-  String get settingsPrivacyHint => 'ロック画面を含め、カバー画像をぼかします。';
+  String get settingsPrivacyHint => 'ロック画面とメディアコントロールでカバー画像を隠します。';
 
   @override
   String get settingsLock => 'アプリロック';
@@ -520,5 +520,11 @@ class AppLocalizationsJa extends AppLocalizations {
   }
 
   @override
-  String get galleryReveal => 'タップして表示';
+  String get challengeTitle => '人間であることを確認';
+
+  @override
+  String get challengeHint => 'サイトがキャプチャを求めています。開いて確認を済ませると再読み込みします。';
+
+  @override
+  String get challengeOpen => 'WebViewで開く';
 }

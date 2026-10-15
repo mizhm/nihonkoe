@@ -139,7 +139,8 @@ class _TagIndexList extends ConsumerWidget {
     final base = branchBase(context);
     return ref.watch(tagIndexProvider(index)).when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => Message(
+          error: (error, _) => Message(
+            error: error,
             icon: Symbols.cloud_off,
             title: l.listErrorTitle,
             hint: l.listErrorHint,

@@ -4,7 +4,7 @@ import 'package:nihonkoe/api/models.dart';
 
 void main() {
   test('listUrl', () {
-    expect(listUrl(const ListQuery.search('ear lick'), page: 2), 'https://japaneseasmr.com/page/2/?s=ear%20lick');
+    expect(listUrl(const ListQuery.search('ear lick'), page: 2), 'https://japaneseasmr.com/search/ear%20lick/page/2/');
     expect(listUrl(const ListQuery.tag('ear-licking')), 'https://japaneseasmr.com/tag/ear-licking/');
   });
 
@@ -18,8 +18,8 @@ void main() {
     expect(listUrl(const ListQuery.latest(), sort: ListSort.oldest), 'https://japaneseasmr.com/?orderby=date&order=asc');
     expect(listUrl(const ListQuery.tag('binaural'), page: 2, sort: ListSort.title), 'https://japaneseasmr.com/tag/binaural/page/2/?orderby=title&order=asc');
     expect(listUrl(const ListQuery.category('requested'), sort: ListSort.popularWeek), 'https://japaneseasmr.com/category/requested/?orderby=post_views&order=desc&date=week');
-    expect(listUrl(const ListQuery.search('ear lick'), page: 2, sort: ListSort.popularAll), 'https://japaneseasmr.com/page/2/?s=ear%20lick&orderby=post_views&order=desc');
-    expect(listUrl(const ListQuery.search('x'), sort: ListSort.popularYear), 'https://japaneseasmr.com/?s=x&orderby=post_views&order=desc&date=year');
+    expect(listUrl(const ListQuery.search('ear lick'), page: 2, sort: ListSort.popularAll), 'https://japaneseasmr.com/search/ear%20lick/page/2/?orderby=post_views&order=desc');
+    expect(listUrl(const ListQuery.search('x'), sort: ListSort.popularYear), 'https://japaneseasmr.com/search/x/?orderby=post_views&order=desc&date=year');
   });
 
   test('tagIndexUrl', () {

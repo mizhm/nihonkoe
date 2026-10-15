@@ -7,14 +7,11 @@ import '../helpers.dart';
 Widget covers() => const Scaffold(body: SizedBox(width: 200, height: 150, child: Cover(url: 'https://pic.weeabo0.xyz/1.jpg')));
 
 void main() {
-  testWidgets('covers are sharp normally and blurred in privacy mode', (tester) async {
-    await pumpRouted(tester, covers(), overrides: await testOverrides());
-    await tester.pumpAndSettle();
-    expect(find.byType(ImageFiltered), findsNothing);
+  testWidgets('privacy mode leaves in-app covers sharp', (tester) async {
     await pumpRouted(tester, covers(), overrides: await testOverrides(prefs: {'language': 'en', 'privacy': true}));
     await tester.pumpAndSettle();
-    // A 16-px decode scaled up blurs for free; a per-cover blur layer would jank long grids.
+    // Privacy only hides artwork outside the app (lock screen, media controls).
     expect(find.byType(ImageFiltered), findsNothing);
-    expect(tester.widget<Image>(find.byType(Image)).image, isA<ResizeImage>());
+    expect(tester.widget<Image>(find.byType(Image)).image, isNot(isA<ResizeImage>()));
   });
 }

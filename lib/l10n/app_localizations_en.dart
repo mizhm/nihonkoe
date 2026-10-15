@@ -377,7 +377,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsPrivacyHint =>
-      'Blur covers, including on the lock screen.';
+      'Hide covers on the lock screen and media controls.';
 
   @override
   String get settingsLock => 'App lock';
@@ -525,5 +525,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get galleryReveal => 'Tap to show';
+  String get challengeTitle => 'Verify you\'re human';
+
+  @override
+  String get challengeHint =>
+      'The site wants a captcha. Pass the check in the WebView and it loads again.';
+
+  @override
+  String get challengeOpen => 'Open WebView';
 }

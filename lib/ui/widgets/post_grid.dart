@@ -2,10 +2,12 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
+import '../../api/client.dart';
 import '../../logic/layout.dart';
 import '../../state/posts.dart';
 import '../../state/settings.dart';
 import '../l10n.dart';
+import '../screens/challenge.dart';
 import 'message.dart';
 import 'post_card.dart';
 import 'skeleton.dart';
@@ -54,15 +56,23 @@ class PostSliverGrid extends ConsumerWidget {
                 child: value.loadingMore
                     ? const CircularProgressIndicator()
                     : value.loadMoreError != null
-                        ? FilledButton.tonal(onPressed: () => ref.read(provider.notifier).loadMore(), child: Text(l.listLoadMore))
+                        ? FilledButton.tonal(
+                            onPressed: () async {
+                              final error = value.loadMoreError;
+                              if (error is ChallengeException) await ChallengeScreen.open(context, error.url);
+                              ref.read(provider.notifier).loadMore();
+                            },
+                            child: Text(l.listLoadMore),
+                          )
                         : const SizedBox.shrink(),
               ),
             ),
           ),
         ]),
-      AsyncValue(hasError: true) => SliverFillRemaining(
+      AsyncValue(hasError: true, :final error) => SliverFillRemaining(
           hasScrollBody: false,
           child: Message(
+            error: error,
             icon: Symbols.cloud_off,
             title: l.listErrorTitle,
             hint: l.listErrorHint,

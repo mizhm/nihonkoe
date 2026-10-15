@@ -34,6 +34,20 @@ void main() {
     expect(client.listPosts(const ListQuery.latest()), throwsA(isA<ApiException>().having((e) => e.statusCode, 'statusCode', 403)));
   });
 
+  test('a Cloudflare challenge goes through the browser fetcher', () async {
+    String? solved;
+    final client = ApiClient(
+      MockClient((_) async => http.Response('Just a moment...', 403, headers: {'cf-mitigated': 'challenge'})),
+      solveChallenge: (url) async {
+        solved = url;
+        return '<ul><li class="site-archive-post post-5"><h2 class="entry-title"><a>声</a></h2></li></ul>';
+      },
+    );
+    final page = await client.listPosts(const ListQuery.latest(), sort: ListSort.popularWeek);
+    expect(solved, 'https://japaneseasmr.com/?orderby=post_views&order=desc&date=week');
+    expect(page.items.single.title, '声');
+  });
+
   test('listTagIndex fetches /tags/ and parses in a background isolate', () async {
     final client = ApiClient(MockClient((req) async {
       expect(req.url.toString(), 'https://japaneseasmr.com/tags/');
