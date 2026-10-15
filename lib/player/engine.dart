@@ -30,7 +30,8 @@ abstract interface class AudioEngine {
 }
 
 class JustAudioEngine implements AudioEngine {
-  final _player = AudioPlayer();
+  // The default header proxy is cleartext localhost, which Android blocks; ExoPlayer sends headers itself.
+  final _player = AudioPlayer(useProxyForRequestHeaders: false);
 
   @override
   Stream<Duration> get positionStream => _player.positionStream;

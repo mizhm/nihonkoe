@@ -35,15 +35,22 @@ class PostCard extends StatelessWidget {
           ),
       ],
     );
-    final chips = Wrap(
-      spacing: 4,
-      runSpacing: 4,
+    // One row only: grid cells have a fixed height, so a wrapped second row would spill onto the next card.
+    final chips = Row(
       children: [
-        for (final tag in tags)
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(color: theme.colorScheme.secondaryContainer, borderRadius: BorderRadius.circular(6)),
-            child: Text(tag, style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSecondaryContainer)),
+        for (final (i, tag) in tags.indexed)
+          Flexible(
+            child: Container(
+              margin: EdgeInsets.only(left: i == 0 ? 0 : 4),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(color: theme.colorScheme.secondaryContainer, borderRadius: BorderRadius.circular(6)),
+              child: Text(
+                tag,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelSmall?.copyWith(color: theme.colorScheme.onSecondaryContainer),
+              ),
+            ),
           ),
       ],
     );

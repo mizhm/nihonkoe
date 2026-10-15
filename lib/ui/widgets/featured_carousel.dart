@@ -9,6 +9,8 @@ import '../links.dart';
 import '../sheets/post_actions.dart';
 import 'cover.dart';
 
+const _itemExtent = 320.0;
+
 class FeaturedCarousel extends ConsumerWidget {
   const FeaturedCarousel({super.key});
 
@@ -28,7 +30,7 @@ class FeaturedCarousel extends ConsumerWidget {
         SizedBox(
           height: 220,
           child: CarouselView(
-            itemExtent: 320,
+            itemExtent: _itemExtent,
             shrinkExtent: 200,
             padding: const EdgeInsets.symmetric(horizontal: 6),
             enableSplash: false,
@@ -68,10 +70,11 @@ class _FeaturedItem extends ConsumerWidget {
             ),
           ),
           if (detail != null)
+            // Fixed width: the carousel squeezes items while swiping, and a stretching title would reflow every frame.
             Positioned(
               left: 12,
-              right: 12,
               bottom: 12,
+              width: _itemExtent - 24,
               child: Text(
                 detail.title,
                 maxLines: 2,

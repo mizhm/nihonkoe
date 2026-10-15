@@ -70,6 +70,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             ),
           ),
           SegmentedButton<SearchMode>(
+            showSelectedIcon: false,
             segments: [
               ButtonSegment(value: SearchMode.keyword, label: Text(l.searchModeKeyword)),
               ButtonSegment(value: SearchMode.tags, label: Text(l.searchModeTags)),
