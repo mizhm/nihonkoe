@@ -117,7 +117,8 @@ PostDetail parsePost(String html, int id) {
     circle: fullTitle == null ? null : RegExp(r'^\[\d+\]\[([^\]]+)\]').firstMatch(fullTitle)?.group(1),
     rjCode: RegExp(r"rjcode='([^']+)'").firstMatch(html)?.group(1) ??
         (fullTitle == null ? null : RegExp(r'\[((?:RJ|VJ|BJ)\d+)\]$').firstMatch(fullTitle)?.group(1)),
-    cv: voice != null && voice.startsWith('CV:') ? voice.substring(3).trim() : null,
+    // Older posts print the same "CV:" line without the id.
+    cv: voice != null && voice.startsWith('CV:') ? voice.substring(3).trim() : _cv(doc.querySelector('.entry-content') ?? doc.documentElement!),
     cover: doc.querySelector('a#img_cover')?.attributes['href'],
     images: [for (final a in doc.querySelectorAll('a[id^="img_"]')) ?a.attributes['href']],
     streams: _streams(doc),

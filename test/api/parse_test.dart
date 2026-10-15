@@ -97,6 +97,12 @@ void main() {
     expect(parsePost(html, 1).streams, ['https://v.weeab0o.xyz/RJ1.mp3', 'https://v.weeab0o.xyz/RJ1%20BGM.ogg']);
   });
 
+  test('parsePost: an older post has its CV line without the voice_actors id', () {
+    const html = '<div class="entry-content"><p style="text-align: center;">CV: Ryou Suzuki, Chiroru Oyama</p>'
+        '<p>裕子(CV:秋山はるる)</p></div>';
+    expect(parsePost(html, 1).cv, 'Ryou Suzuki, Chiroru Oyama');
+  });
+
   test('parsePost: a post without audio has no streams', () {
     final p = parsePost('<h1 class="page-title">Only text</h1>', 2);
     expect(p.title, 'Only text');
